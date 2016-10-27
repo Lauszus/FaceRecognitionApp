@@ -1,0 +1,12 @@
+# Face Recognition Android App
+#### Developed by Kristian Lauszus, 2016
+
+The code is released under the GNU General Public License.
+_________
+[![Build Status](https://travis-ci.com/Lauszus/FaceRecognitionApp.svg?token=ppc6rHRAs23cjxNFyjc1&branch=master)](https://travis-ci.com/Lauszus/FaceRecognitionApp)
+
+This project demonstrats how to calculate Eigenfaces and Fisherfaces used for face recognition on an Android device.
+
+The library uses my other project [Eigenfaces](https://github.com/Lauszus/Eigenfaces) in order to calculate the Eigenfaces and Fisherfaces.
+
+For more information send me an email at <lauszus@gmail.com>.
