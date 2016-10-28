@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:CameraBridgeViewBase="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_face_recognition_app"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".FaceRecognitionAppActivity">
 
-    <!--<android.support.v7.widget.Toolbar
+    <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:minHeight="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />-->
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:layout_height="?attr/actionBarSize" />
 
     <!--CameraBridgeViewBase:show_fps="true"-->
     <org.opencv.android.JavaCameraView
@@ -21,4 +26,23 @@
         android:layout_height="match_parent"
         android:id="@+id/camera_calibration_java_surface_view" />
 
-</LinearLayout>
+    <LinearLayout
+        style="?metaButtonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@color/black_overlay"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent">
+
+        <Button
+            android:id="@+id/upload_button"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/picture_button" />
+
+    </LinearLayout>
+
+</FrameLayout>

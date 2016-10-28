@@ -7,7 +7,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -34,8 +37,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    private Mat mRgba;
-    private Mat mGray;
+    private Mat mRgba, mGray;
+
+    private MenuItem mEigenfaces, mFisherfaces;
 
     private static final int PERMISSIONS_REQUEST_CODE = 0;
 
@@ -46,7 +50,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_face_recognition_app);
-        //setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_calibration_java_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -61,7 +65,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
                     System.loadLibrary("native-lib"); // Load native library after(!) OpenCV initialization
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
-                    mOpenCvCameraView.enableFpsMeter();
                     break;
                 default:
                     super.onManagerConnected(status);
@@ -103,7 +106,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
     }
 
     private void loadOpenCV() {
-        if (!OpenCVLoader.initDebug()) {
+        if (!OpenCVLoader.initDebug(true)) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
         } else {
@@ -132,67 +135,24 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-        /*
-        if (mAbsoluteFaceSize == 0) {
-            int height = mGray.rows();
-            if (Math.round(height * mRelativeFaceSize) > 0) {
-                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
-            }
-            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
-        }
 
-        MatOfRect faces = new MatOfRect();
-
-        if (mDetectorType == JAVA_DETECTOR) {
-            if (mJavaDetector != null)
-                mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
-                        new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
-        }
-        else if (mDetectorType == NATIVE_DETECTOR) {
-            if (mNativeDetector != null)
-                mNativeDetector.detect(mGray, faces);
-        }
-        else {
-            Log.e(TAG, "Detection method is not selected!");
-        }
-
-        Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++)
-            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
-        */
-        Core.flip(mGray, mGray, 1); // Flip image to get mirror effect
-        return mGray;
+        Core.flip(mRgba, mRgba, 1); // Flip image to get mirror effect
+        return mRgba;
     }
 
-    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.i(TAG, "called onCreateOptionsMenu");
-        mItemFace50 = menu.add("Face size 50%");
-        mItemFace40 = menu.add("Face size 40%");
-        mItemFace30 = menu.add("Face size 30%");
-        mItemFace20 = menu.add("Face size 20%");
-        mItemType   = menu.add(mDetectorName[mDetectorType]);
+        mEigenfaces = menu.add("Eigenfaces");
+        mFisherfaces = menu.add("Fisherfaces");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
-        if (item == mItemFace50)
-            setMinFaceSize(0.5f);
-        else if (item == mItemFace40)
-            setMinFaceSize(0.4f);
-        else if (item == mItemFace30)
-            setMinFaceSize(0.3f);
-        else if (item == mItemFace20)
-            setMinFaceSize(0.2f);
-        else if (item == mItemType) {
-            int tmpDetectorType = (mDetectorType + 1) % mDetectorName.length;
-            item.setTitle(mDetectorName[tmpDetectorType]);
-            setDetectorType(tmpDetectorType);
-        }
+        if (item == mEigenfaces)
+            Toast.makeText(this, "Eigenfaces", Toast.LENGTH_SHORT).show();
+        else if (item == mFisherfaces)
+            Toast.makeText(this, "Fisherfaces", Toast.LENGTH_SHORT).show();
         return true;
     }
-    */
 }

@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">FaceRecognitionApp</string>
+    <string name="app_name">Face Recognition</string>
+    <string name="picture_button">Take picture</string>
 </resources>
