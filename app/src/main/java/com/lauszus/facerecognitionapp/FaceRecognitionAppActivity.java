@@ -3,6 +3,7 @@ package com.lauszus.facerecognitionapp;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -23,6 +25,13 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class FaceRecognitionAppActivity extends AppCompatActivity implements CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
@@ -51,6 +60,13 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
 
         setContentView(R.layout.activity_face_recognition_app);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
+
+        findViewById(R.id.upload_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SaveImage(mRgba);
+            }
+        });
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_calibration_java_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -99,8 +115,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
         super.onResume();
 
         // Request permission if needed
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PERMISSIONS_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
         else
             loadOpenCV();
     }
@@ -138,6 +154,24 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
 
         Core.flip(mRgba, mRgba, 1); // Flip image to get mirror effect
         return mRgba;
+    }
+
+    public void SaveImage(Mat mat) {
+        Mat mIntermediateMat = new Mat();
+
+        Imgproc.cvtColor(mat, mIntermediateMat, Imgproc.COLOR_RGBA2BGR, 3);
+
+        File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "facereg"); // Save pictures in Pictures/facereg
+        path.mkdir(); // Create directory if needed
+        String fileName = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".png";
+        File file = new File(path, fileName);
+
+        boolean bool = Imgcodecs.imwrite(file.toString(), mIntermediateMat);
+
+        if (bool)
+            Log.d(TAG, "SUCCESS writing image to external storage");
+        else
+            Log.e(TAG, "Failed writing image to external storage");
     }
 
     @Override
