@@ -17,10 +17,16 @@
  ******************************************************************************/
 
 #include <jni.h>
+#include <Eigen/Dense> // http://eigen.tuxfamily.org
 #include <opencv2/core.hpp>
+#include <opencv2/core/eigen.hpp>
+#include <Eigenfaces/Eigenfaces.h>
+
+Eigenfaces eigenfaces;
 
 using namespace std;
 using namespace cv;
+using namespace Eigen;
 
 #ifdef __cplusplus
 extern "C" {

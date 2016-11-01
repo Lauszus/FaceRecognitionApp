@@ -5,6 +5,14 @@ sudo: false
 jdk:
   - oraclejdk8
 
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 android:
   components:
     # Use the latest revision of Android SDK Tools
@@ -19,7 +27,6 @@ android:
 
     # Additional components
     - extra
-    - addon
 
 before_script:
   - git clone --depth 1 https://github.com/urho3d/android-ndk.git
@@ -27,6 +34,11 @@ before_script:
   - wget https://github.com/opencv/opencv/releases/download/3.1.0/OpenCV-3.1.0-android-sdk.zip
   - unzip OpenCV-3.1.0-android-sdk.zip
   - export OPENCV_ANDROID_SDK=$(pwd)/OpenCV-android-sdk
+  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.zip -O Eigen3.zip
+  - unzip Eigen3.zip -d Eigen3
+  - cd Eigen3/*
+  - export EIGEN3_DIR=$(pwd)
+  - cd ../../
 
 script:
   ./gradlew build

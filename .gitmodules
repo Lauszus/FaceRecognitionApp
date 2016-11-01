@@ -1,0 +1,3 @@
+[submodule "app/src/main/cpp/Eigenfaces"]
+	path = app/src/main/cpp/Eigenfaces
+	url = https://github.com/Lauszus/Eigenfaces.git
