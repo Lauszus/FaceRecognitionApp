@@ -3,7 +3,7 @@
 
 The code is released under the GNU General Public License.
 _________
-[![Build Status](https://travis-ci.com/Lauszus/FaceRecognitionApp.svg?token=ppc6rHRAs23cjxNFyjc1&branch=master)](https://travis-ci.com/Lauszus/FaceRecognitionApp)
+[![Build Status](https://travis-ci.org/Lauszus/FaceRecognitionApp.svg?branch=master)](https://travis-ci.org/Lauszus/FaceRecognitionApp)
 
 This project demonstrats how to calculate Eigenfaces and Fisherfaces used for face recognition on an Android device.
 
