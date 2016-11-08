@@ -20,6 +20,7 @@ package com.lauszus.facerecognitionapp;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -277,16 +278,20 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         mRgba = inputFrame.rgba();
 
         // Flip image to get mirror effect
-        int rotation = mOpenCvCameraView.mWindowManager.getDefaultDisplay().getRotation();
-        switch (rotation) {
-            case Surface.ROTATION_0:
-            case Surface.ROTATION_180:
-                Core.flip(mRgba, mRgba, 0); // Flip along x-axis
-                break;
-            case Surface.ROTATION_90:
-            case Surface.ROTATION_270:
-                Core.flip(mRgba, mRgba, 1); // Flip along y-axis
-                break;
+        int orientation = mOpenCvCameraView.getScreenOrientation();
+        if (mOpenCvCameraView.isEmulator()) // Treat emulators as a special case
+            Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+        else {
+            switch (orientation) {
+                case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+                    Core.flip(mRgba, mRgba, 0); // Flip along x-axis
+                    break;
+                case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+                    Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+                    break;
+            }
         }
 
         return mRgba;

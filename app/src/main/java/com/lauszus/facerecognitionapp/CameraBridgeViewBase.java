@@ -6,12 +6,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -406,6 +408,63 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         return Build.BRAND.equalsIgnoreCase("generic") || Build.BRAND.equalsIgnoreCase("android");
     }
 
+    /**
+     * Determine current orientation of the device.
+     * Source: http://stackoverflow.com/a/10383164/2175837
+     * @return Returns the current orientation of the device.
+     */
+    public int getScreenOrientation() {
+        int rotation = mWindowManager.getDefaultDisplay().getRotation();
+        DisplayMetrics dm = new DisplayMetrics();
+        mWindowManager.getDefaultDisplay().getMetrics(dm);
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        int orientation;
+        // if the device's natural orientation is portrait:
+        if ((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) && height > width || (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) && width > height) {
+            switch(rotation) {
+                case Surface.ROTATION_0:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+                case Surface.ROTATION_90:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_180:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+                    break;
+                case Surface.ROTATION_270:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+                    break;
+                default:
+                    Log.e(TAG, "Unknown screen orientation. Defaulting to portrait");
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+            }
+        } else { // If the device's natural orientation is landscape or if the device is square:
+            switch(rotation) {
+                case Surface.ROTATION_0:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_90:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+                case Surface.ROTATION_180:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_270:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+                    break;
+                default:
+                    Log.e(TAG, "Unknown screen orientation. Defaulting to landscape");
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+            }
+        }
+
+        return orientation;
+    }
+
+    /**
      * This method shall be called by the subclasses when they have valid
      * object and want it to be delivered to external client (via callback) and
      * then displayed on the screen.
@@ -436,20 +495,23 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             Canvas canvas = getHolder().lockCanvas();
             if (canvas != null) {
                 canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
-                int rotation = mWindowManager.getDefaultDisplay().getRotation();
                 int degrees = 0;
-                switch (rotation) {
-                    case Surface.ROTATION_0:
-                        degrees = -90;
-                        break;
-                    case Surface.ROTATION_90:
-                        break;
-                    case Surface.ROTATION_180:
-                        degrees = 90;
-                        break;
-                    case Surface.ROTATION_270:
-                        degrees = 180;
-                        break;
+
+                if (!isEmulator()) { // Rotation is always reported as portrait on the emulator for some reason
+                    int orientation = getScreenOrientation();
+                    switch (orientation) {
+                        case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+                            degrees = -90;
+                            break;
+                        case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+                            break;
+                        case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+                            degrees = 90;
+                            break;
+                        case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+                            degrees = 180;
+                            break;
+                    }
                 }
 
                 Matrix matrix = new Matrix();
