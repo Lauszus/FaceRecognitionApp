@@ -57,6 +57,7 @@ import org.opencv.imgproc.Imgproc;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
@@ -163,6 +164,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
                     builder.setCancelable(false); // Prevent the user from closing the dialog
 
                     String[] labels = uniqueLabels.toArray(new String[uniqueLabels.size()]); // Convert to String array for ArrayAdapter
+                    Arrays.sort(labels); // Sort labels alphabetically
                     final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, labels);
                     ListView mListView = new ListView(FaceRecognitionAppActivity.this);
                     mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
