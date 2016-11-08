@@ -11,13 +11,13 @@
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
-        android:minHeight="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
         android:elevation="4dp"
         android:layout_width="match_parent"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        android:layout_height="?attr/actionBarSize" />
+        android:layout_height="?attr/actionBarSize"
+        android:minHeight="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ToolbarTheme"
+        app:popupTheme="@style/ToolbarPopupTheme" />
 
     <!--CameraBridgeViewBase:show_fps="true"-->
     <org.opencv.android.JavaCameraView
@@ -36,11 +36,12 @@
         tools:ignore="UselessParent">
 
         <Button
-            android:id="@+id/upload_button"
+            android:id="@+id/take_picture_button"
             style="?metaButtonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="@color/white"
             android:text="@string/picture_button" />
 
     </LinearLayout>

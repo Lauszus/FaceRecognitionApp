@@ -19,20 +19,27 @@
 package com.lauszus.facerecognitionapp;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -43,32 +50,62 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class FaceRecognitionAppActivity extends AppCompatActivity implements CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
+    private static final int PERMISSIONS_REQUEST_CODE = 0;
+    ArrayList<Mat> images = new ArrayList<>();
+    ArrayList<String> imagesLabels = new ArrayList<>();
+    private CameraBridgeViewBase mOpenCvCameraView;
+    private Mat mRgba, mGray;
+    private MenuItem mEigenfaces, mFisherfaces;
 
     /**
-     * A native method that is implemented by the 'native-lib' native library,
+     * Native methods that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
     public native void YUV2RGB(long matAddrYUV, long matAddrRgba);
 
     public native void HistEQ(long matAddrYUV, long matAddrRgba);
 
-    private CameraBridgeViewBase mOpenCvCameraView;
+    public native void TrainEigenfaces(long addrImages);
 
-    private Mat mRgba, mGray;
+    public native float[] EigenfacesDist(long addrImage);
 
-    private MenuItem mEigenfaces, mFisherfaces;
+    private void addLabel(String string) {
+        String label = string.substring(0, 1).toUpperCase() + string.substring(1).trim().toLowerCase(); // Make sure that the name is always uppercase and rest is lowercase
+        imagesLabels.add(label); // Add label to list of labels
+        Log.i(TAG, "Label: " + label);
+    }
 
-    private static final int PERMISSIONS_REQUEST_CODE = 0;
+    private void showEnterNameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
+        builder.setTitle("Please enter your name:");
+
+        final EditText input = new EditText(FaceRecognitionAppActivity.this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                addLabel(input.getText().toString());
+            }
+        });
+        builder.setCancelable(false); // User has to input a name
+        builder.show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,10 +116,79 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
         setContentView(R.layout.activity_face_recognition_app);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
 
-        findViewById(R.id.upload_button).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.take_picture_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SaveImage(mRgba);
+                Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+                Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
+                Imgproc.resize(mGray, mGray, imageSize);
+                Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+                //SaveImage(mGray);
+
+                Mat image = mGray.reshape(0, (int) mGray.total()); // Create column vector
+                Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
+
+                float[] dist = EigenfacesDist(image.getNativeObjAddr()); // Calculate normalized Euclidean distance
+
+                int minIndex = -1;
+                if (dist != null) {
+                    float minDist = dist[0];
+                    minIndex = 0;
+                    for (int i = 1; i < dist.length; i++) {
+                        if (dist[i] < minDist) {
+                            minDist = dist[i];
+                            minIndex = i;
+                        }
+                    }
+                } else
+                    Log.e(TAG, "Array is NULL");
+
+                if (minIndex != -1) {
+                    Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
+                    Toast.makeText(FaceRecognitionAppActivity.this, "Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG).show();
+                }
+
+                Set<String> uniqueLabels = new HashSet<>(imagesLabels); // Get all unique labels
+                if (!uniqueLabels.isEmpty()) { // Make sure that there are any labels
+                    // Inspired by: http://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
+                    AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
+                    builder.setTitle("Select label:");
+                    builder.setNegativeButton("New label", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            showEnterNameDialog();
+                        }
+                    });
+                    builder.setCancelable(false); // Prevent the user from closing the dialog
+
+                    String[] labels = uniqueLabels.toArray(new String[uniqueLabels.size()]); // Convert to String array for ArrayAdapter
+                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, labels);
+                    ListView mListView = new ListView(FaceRecognitionAppActivity.this);
+                    mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
+                    builder.setView(mListView); // Set the ListView
+
+                    final AlertDialog dialog = builder.show(); // Show dialog and store in final variable, so it can be dismissed by the ListView
+
+                    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            dialog.dismiss();
+                            addLabel(arrayAdapter.getItem(position));
+                        }
+                    });
+                } else
+                    showEnterNameDialog();
+
+                images.add(image); // Add current image to the array
+
+                Mat imagesMatrix = new Mat((int) image.total(), images.size(), image.type());
+                for (int i = 0; i < images.size(); i++)
+                    images.get(i).copyTo(imagesMatrix.col(i)); // Create matrix where each image is represented as a column vector
+
+                Log.i(TAG, "Images height: " + imagesMatrix.height() + " Width: " + imagesMatrix.width() + " total: " + imagesMatrix.total());
+
+                TrainEigenfaces(imagesMatrix.getNativeObjAddr());
             }
         });
 
@@ -90,22 +196,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
     }
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                    System.loadLibrary("native-lib"); // Load native library after(!) OpenCV initialization
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                    break;
-                default:
-                    super.onManagerConnected(status);
-                    break;
-            }
-        }
-    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -139,6 +229,22 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
             loadOpenCV();
     }
 
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                    System.loadLibrary("native-lib"); // Load native library after(!) OpenCV initialization
+                    Log.i(TAG, "OpenCV loaded successfully");
+                    mOpenCvCameraView.enableView();
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+
     private void loadOpenCV() {
         if (!OpenCVLoader.initDebug(true)) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
@@ -167,8 +273,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
+        mRgba = inputFrame.rgba();
 
         Core.flip(mRgba, mRgba, 1); // Flip image to get mirror effect
         return mRgba;
@@ -177,9 +283,12 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
     public void SaveImage(Mat mat) {
         Mat mIntermediateMat = new Mat();
 
-        Imgproc.cvtColor(mat, mIntermediateMat, Imgproc.COLOR_RGBA2BGR, 3);
+        if (mat.channels() == 1) // Grayscale image
+            Imgproc.cvtColor(mat, mIntermediateMat, Imgproc.COLOR_GRAY2BGR);
+        else
+            Imgproc.cvtColor(mat, mIntermediateMat, Imgproc.COLOR_RGBA2BGR);
 
-        File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "facereg"); // Save pictures in Pictures/facereg
+        File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), TAG); // Save pictures in Pictures directory
         path.mkdir(); // Create directory if needed
         String fileName = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".png";
         File file = new File(path, fileName);

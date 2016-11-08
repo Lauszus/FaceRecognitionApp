@@ -21,6 +21,12 @@
 #include <opencv2/core.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <Eigenfaces/Eigenfaces.h>
+#include <android/log.h>
+
+#define LOG_TAG "FaceRecognitionAppActivity/Native"
+#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 
 Eigenfaces eigenfaces;
 
@@ -31,6 +37,50 @@ using namespace Eigen;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_TrainEigenfaces(JNIEnv, jobject, jlong addrImages) {
+    Mat *pImages = (Mat *) addrImages; // Each images is represented as a column vector
+
+    MatrixXf images;
+    cv2eigen(*pImages, images); // Convert from OpenCV Mat to Eigen matrix
+
+    eigenfaces.compute(images); // Compute Eigenfaces
+
+    /*
+    if (!eigenfaces.U.hasNaN()) {
+        for (int i = 0; i < eigenfaces.K; i++) { // Loop through Eigenfaces
+            for (int j = 0; j < 10; j++) // Print first 10 values
+                LOGI("Eigenface[%d]: %f", i, eigenfaces.U(j, i));
+        }
+    } else
+        LOGE("Eigenfaces are not valid!");
+    */
+}
+
+JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_EigenfacesDist(JNIEnv *env, jobject, jlong addrImage) {
+    if (eigenfaces.U.any()) { // Make sure that eigenvector has been calculated
+        Mat *pImage = (Mat *) addrImage; // Image is represented as a column vector
+
+        VectorXf image;
+        cv2eigen(*pImage, image); // Convert from OpenCV Mat to Eigen matrix
+
+        LOGI("Reconstructing Faces");
+        VectorXf W = eigenfaces.project(image); // Project onto Eigenfaces
+        //VectorXf face = eigenfaces.reconstructFace(W);
+
+        LOGI("Calculate normalized Euclidean distance");
+        VectorXf dist = eigenfaces.euclideanDist(W);
+
+        vector<size_t> soredIdx = eigenfaces.sortIndexes(dist);
+        for (auto idx : soredIdx)
+            LOGI("dist[%zu]: %f", idx, dist(idx));
+
+        jfloatArray floatArray = env->NewFloatArray(dist.rows());
+        env->SetFloatArrayRegion(floatArray, 0, dist.rows(), dist.data()); // Copy data into array
+        return floatArray;
+    }
+    return NULL;
+}
 
 static inline void convertYUVToRGBA(uint8_t y, uint8_t u, uint8_t v, uint8_t *buf) __attribute__((always_inline));
 
@@ -63,14 +113,14 @@ static void convertYUVImageToRGBA(const Mat *pYUV, Mat *pRGB) {
     }
 }
 
-void Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_YUV2RGB(JNIEnv *, jobject, jlong addrYuv, jlong addrRgba) {
+JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_YUV2RGB(JNIEnv, jobject, jlong addrYuv, jlong addrRgba) {
     Mat *pYUV = (Mat *) addrYuv; // YUV 4:2:0 planar image, with 8 bit Y samples, followed by interleaved V/U plane with 8bit 2x2 sub-sampled chroma samples
     Mat *pRGB = (Mat *) addrRgba; // RGBA image
 
     convertYUVImageToRGBA(pYUV, pRGB);
 }
 
-void Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_HistEQ(JNIEnv *env, jobject thiz, jlong addrYuv, jlong addrRgba) {
+JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_HistEQ(JNIEnv, jobject, jlong addrYuv, jlong addrRgba) {
     Mat *pYUV = (Mat *) addrYuv; // YUV 4:2:0 planar image, with 8 bit Y samples, followed by interleaved V/U plane with 8bit 2x2 sub-sampled chroma samples
     Mat *pRGB = (Mat *) addrRgba; // RGBA image
 
