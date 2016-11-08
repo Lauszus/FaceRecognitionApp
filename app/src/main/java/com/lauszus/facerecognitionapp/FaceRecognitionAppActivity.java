@@ -194,7 +194,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
             }
         });
 
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_calibration_java_surface_view);
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_java_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
     }
@@ -307,7 +307,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
     public boolean onCreateOptionsMenu(Menu menu) {
         mEigenfaces = menu.add("Eigenfaces");
         mFisherfaces = menu.add("Fisherfaces");
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
