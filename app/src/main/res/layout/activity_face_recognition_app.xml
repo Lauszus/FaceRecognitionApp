@@ -10,7 +10,7 @@
     tools:context=".FaceRecognitionAppActivity">
 
     <!--CameraBridgeViewBase:show_fps="true"-->
-    <org.opencv.android.JavaCameraView
+    <com.lauszus.facerecognitionapp.JavaCameraView
         CameraBridgeViewBase:camera_id="front"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

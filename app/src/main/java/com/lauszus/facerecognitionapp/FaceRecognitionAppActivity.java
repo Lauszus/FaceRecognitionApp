@@ -33,6 +33,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -43,9 +44,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
@@ -63,7 +61,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class FaceRecognitionAppActivity extends AppCompatActivity implements CvCameraViewListener2 {
+public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
     ArrayList<Mat> images = new ArrayList<>();
@@ -274,11 +272,23 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements CvC
         mRgba.release();
     }
 
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mGray = inputFrame.gray();
         mRgba = inputFrame.rgba();
 
-        Core.flip(mRgba, mRgba, 1); // Flip image to get mirror effect
+        // Flip image to get mirror effect
+        int rotation = mOpenCvCameraView.mWindowManager.getDefaultDisplay().getRotation();
+        switch (rotation) {
+            case Surface.ROTATION_0:
+            case Surface.ROTATION_180:
+                Core.flip(mRgba, mRgba, 0); // Flip along x-axis
+                break;
+            case Surface.ROTATION_90:
+            case Surface.ROTATION_270:
+                Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+                break;
+        }
+
         return mRgba;
     }
 
