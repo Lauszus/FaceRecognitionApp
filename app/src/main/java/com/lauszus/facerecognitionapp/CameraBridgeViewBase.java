@@ -10,6 +10,7 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Surface;
@@ -397,6 +398,14 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     }
 
     /**
+     * Used to check if the app is running on an emulator or not.
+     * See: http://stackoverflow.com/a/27233595/2175837.
+     * @return True if the app is running on an emulator.
+     */
+    public boolean isEmulator() {
+        return Build.BRAND.equalsIgnoreCase("generic") || Build.BRAND.equalsIgnoreCase("android");
+    }
+
      * This method shall be called by the subclasses when they have valid
      * object and want it to be delivered to external client (via callback) and
      * then displayed on the screen.
