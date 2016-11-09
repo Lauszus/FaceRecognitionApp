@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -97,14 +98,29 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
-        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Submit", null); // Set up positive button, but do not provide a listener, so we can check the string before dismissing the dialog
+        builder.setCancelable(false); // User has to input a name
+        AlertDialog dialog = builder.create();
+
+        // Source: http://stackoverflow.com/a/7636468/2175837
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                addLabel(input.getText().toString());
+            public void onShow(final DialogInterface dialog) {
+                Button mButton = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE);
+                mButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String string = input.getText().toString().trim();
+                        if (!string.isEmpty()) { // Make sure the input is valid
+                            // If input is valid, dismiss the dialog and add the label to the array
+                            dialog.dismiss();
+                            addLabel(string);
+                        }
+                    }
+                });
             }
         });
-        builder.setCancelable(false); // User has to input a name
-        builder.show();
+        dialog.show();
     }
 
     @Override
@@ -115,6 +131,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         setContentView(R.layout.activity_face_recognition_app);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
+
+        images.clear(); // Clear both arrays, when new instance is created
+        imagesLabels.clear();
 
         findViewById(R.id.take_picture_button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,23 +149,21 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
                 float[] dist = EigenfacesDist(image.getNativeObjAddr()); // Calculate normalized Euclidean distance
 
-                int minIndex = -1;
                 if (dist != null) {
                     float minDist = dist[0];
-                    minIndex = 0;
+                    int minIndex = 0;
                     for (int i = 1; i < dist.length; i++) {
                         if (dist[i] < minDist) {
                             minDist = dist[i];
                             minIndex = i;
                         }
                     }
+                    if (imagesLabels.size() > minIndex) { // Just to be sure
+                        Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
+                        Toast.makeText(FaceRecognitionAppActivity.this, "Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG).show();
+                    }
                 } else
                     Log.e(TAG, "Array is NULL");
-
-                if (minIndex != -1) {
-                    Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
-                    Toast.makeText(FaceRecognitionAppActivity.this, "Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG).show();
-                }
 
                 Set<String> uniqueLabels = new HashSet<>(imagesLabels); // Get all unique labels
                 if (!uniqueLabels.isEmpty()) { // Make sure that there are any labels
