@@ -25,8 +25,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -34,7 +38,6 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -63,14 +66,13 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
     ArrayList<Mat> images = new ArrayList<>();
     ArrayList<String> imagesLabels = new ArrayList<>();
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba, mGray;
-    private MenuItem mEigenfaces, mFisherfaces;
 
     /**
      * Native methods that is implemented by the 'native-lib' native library,
@@ -85,7 +87,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     public native float[] EigenfacesDist(long addrImage);
 
     private void addLabel(String string) {
-        String label = string.substring(0, 1).toUpperCase() + string.substring(1).trim().toLowerCase(); // Make sure that the name is always uppercase and rest is lowercase
+        String label = string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1).trim().toLowerCase(Locale.US); // Make sure that the name is always uppercase and rest is lowercase
         imagesLabels.add(label); // Add label to list of labels
         Log.i(TAG, "Label: " + label);
     }
@@ -130,7 +132,16 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_face_recognition_app);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar)); // Sets the Toolbar to act as the ActionBar for this Activity window
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar); // Sets the Toolbar to act as the ActionBar for this Activity window
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
         images.clear(); // Clear both arrays, when new instance is created
         imagesLabels.clear();
@@ -314,6 +325,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         return mRgba;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void SaveImage(Mat mat) {
         Mat mIntermediateMat = new Mat();
 
@@ -336,18 +348,48 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     }
 
     @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START))
+            drawer.closeDrawer(GravityCompat.START);
+        else
+            super.onBackPressed();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        mEigenfaces = menu.add("Eigenfaces");
-        mFisherfaces = menu.add("Fisherfaces");
-        return super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item == mEigenfaces)
-            Toast.makeText(this, "Eigenfaces", Toast.LENGTH_SHORT).show();
-        else if (item == mFisherfaces)
-            Toast.makeText(this, "Fisherfaces", Toast.LENGTH_SHORT).show();
+        int id = item.getItemId();
+
+        if (id == R.id.eigenfaces) {
+            Toast.makeText(this, getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT).show();
+            item.setChecked(true);
+            return true;
+        } else if (id == R.id.fisherfaces) {
+            Toast.makeText(this, getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT).show();
+            item.setChecked(true);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        /*if (id == R.id.nav_camera) {
+            // Handle the camera action
+        }*/
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 }

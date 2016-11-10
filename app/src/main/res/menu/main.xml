@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:checkableBehavior="single">
+
+        <item
+            android:checked="true"
+            android:id="@+id/eigenfaces"
+            android:orderInCategory="1"
+            android:title="@string/eigenfaces"
+            app:showAsAction="never" />
+
+        <item
+            android:id="@+id/fisherfaces"
+            android:orderInCategory="2"
+            android:title="@string/fisherfaces"
+            app:showAsAction="never" />
+
+    </group>
+</menu>
