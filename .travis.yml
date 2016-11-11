@@ -1,6 +1,6 @@
 language: android
 
-sudo: false
+sudo: required
 
 jdk:
   - oraclejdk8
@@ -26,7 +26,7 @@ android:
     - android-24
 
     # Additional components
-    - extra
+    - extra-android-m2repository
 
 before_script:
   - git clone --depth 1 https://github.com/urho3d/android-ndk.git
