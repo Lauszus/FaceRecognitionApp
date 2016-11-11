@@ -5,7 +5,6 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="eigenfaces">Eigenfaces</string>
     <string name="fisherfaces">Fisherfaces</string>
-    <string name="thresholds">Thresholds</string>
-    <string name="threshold_face">Face threshold</string>
-    <string name="threshold_distance">Distance threshold</string>
+    <string name="threshold_face">Face threshold:</string>
+    <string name="threshold_distance">Distance threshold:</string>
 </resources>

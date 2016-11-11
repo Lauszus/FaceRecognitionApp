@@ -25,7 +25,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -36,8 +35,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -46,6 +43,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -66,7 +64,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2, NavigationView.OnNavigationItemSelectedListener {
+public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
     ArrayList<Mat> images = new ArrayList<>();
@@ -140,8 +138,51 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        findViewById(R.id.eigenfaces).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(FaceRecognitionAppActivity.this, getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT).show();
+            }
+        });
+        findViewById(R.id.fisherfaces).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(FaceRecognitionAppActivity.this, getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        final SeekBarArrows thresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
+        thresholdFace.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                thresholdFace.onProgressChanged(seekBar, progress, fromUser);
+                Log.i(TAG, "Face threshold: " + thresholdFace.progressToString(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        final SeekBarArrows thresholdDistance = (SeekBarArrows) findViewById(R.id.threshold_distance);
+        thresholdDistance.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                thresholdDistance.onProgressChanged(seekBar, progress, fromUser);
+                Log.i(TAG, "Distance threshold: " + thresholdDistance.progressToString(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
 
         images.clear(); // Clear both arrays, when new instance is created
         imagesLabels.clear();
@@ -354,42 +395,5 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             drawer.closeDrawer(GravityCompat.START);
         else
             super.onBackPressed();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.eigenfaces) {
-            Toast.makeText(this, getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT).show();
-            item.setChecked(true);
-            return true;
-        } else if (id == R.id.fisherfaces) {
-            Toast.makeText(this, getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT).show();
-            item.setChecked(true);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        /*if (id == R.id.nav_camera) {
-            // Handle the camera action
-        }*/
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 }

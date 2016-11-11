@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item>
+        <!-- Inspired by: http://stackoverflow.com/a/9884428/2175837 -->
+        <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+            <solid android:color="@color/arrow_background_pressed" />
+            <stroke android:width="0.1sp" android:color="@color/arrow_border" />
+        </shape>
+    </item>
+
+    <item
+        android:top="@dimen/arrow_margin"
+        android:left="@dimen/arrow_margin"
+        android:right="@dimen/arrow_margin" >
+        <bitmap android:src="@drawable/ic_find_next_mtrl_alpha" />
+    </item>
+</layer-list>
