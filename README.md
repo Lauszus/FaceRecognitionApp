@@ -7,6 +7,6 @@ _________
 
 This project demonstrats how to calculate Eigenfaces and Fisherfaces used for face recognition on an Android device.
 
-The library uses my other project [Eigenfaces](https://github.com/Lauszus/Eigenfaces) in order to calculate the Eigenfaces and Fisherfaces.
+The library uses my other project [FaceRecognitionLib](https://github.com/Lauszus/FaceRecognitionLib) in order to calculate the Eigenfaces and Fisherfaces.
 
 For more information send me an email at <lauszus@gmail.com>.

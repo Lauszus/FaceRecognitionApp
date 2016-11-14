@@ -20,7 +20,9 @@
 #include <Eigen/Dense> // http://eigen.tuxfamily.org
 #include <opencv2/core.hpp>
 #include <opencv2/core/eigen.hpp>
-#include <Eigenfaces/Eigenfaces.h>
+#include <FaceRecognitionLib/Eigenfaces.h>
+#include <FaceRecognitionLib/Fisherfaces.h>
+#include <FaceRecognitionLib/Tools.h>
 #include <android/log.h>
 
 #define LOG_TAG "FaceRecognitionAppActivity/Native"
@@ -29,6 +31,7 @@
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 
 Eigenfaces eigenfaces;
+Fisherfaces fisherfaces;
 
 using namespace std;
 using namespace cv;
@@ -44,13 +47,13 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppAct
     MatrixXf images;
     cv2eigen(*pImages, images); // Convert from OpenCV Mat to Eigen matrix
 
-    eigenfaces.compute(images); // Compute Eigenfaces
+    eigenfaces.train(images); // Compute Eigenfaces
 
     /*
-    if (!eigenfaces.U.hasNaN()) {
-        for (int i = 0; i < eigenfaces.K; i++) { // Loop through Eigenfaces
+    if (!eigenfaces.V.hasNaN()) {
+        for (int i = 0; i < eigenfaces.numComponents; i++) { // Loop through Eigenfaces
             for (int j = 0; j < 10; j++) // Print first 10 values
-                LOGI("Eigenface[%d]: %f", i, eigenfaces.U(j, i));
+                LOGI("Eigenface[%d]: %f", i, eigenfaces.V(j, i));
         }
     } else
         LOGE("Eigenfaces are not valid!");
@@ -58,7 +61,7 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppAct
 }
 
 JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitionAppActivity_EigenfacesDist(JNIEnv *env, jobject, jlong addrImage) {
-    if (eigenfaces.U.any()) { // Make sure that eigenvector has been calculated
+    if (eigenfaces.V.any()) { // Make sure that eigenvector the has been calculated
         Mat *pImage = (Mat *) addrImage; // Image is represented as a column vector
 
         VectorXf image;
@@ -71,7 +74,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_FaceRecognitio
         LOGI("Calculate normalized Euclidean distance");
         VectorXf dist = eigenfaces.euclideanDist(W);
 
-        vector<size_t> soredIdx = eigenfaces.sortIndexes(dist);
+        vector<size_t> soredIdx = sortIndexes(dist);
         for (auto idx : soredIdx)
             LOGI("dist[%zu]: %f", idx, dist(idx));
 

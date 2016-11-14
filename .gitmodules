@@ -1,3 +1,3 @@
-[submodule "app/src/main/cpp/Eigenfaces"]
-	path = app/src/main/cpp/Eigenfaces
-	url = https://github.com/Lauszus/Eigenfaces.git
+[submodule "app/src/main/cpp/FaceRecognitionLib"]
+	path = app/src/main/cpp/FaceRecognitionLib
+	url = https://github.com/Lauszus/FaceRecognitionLib.git
