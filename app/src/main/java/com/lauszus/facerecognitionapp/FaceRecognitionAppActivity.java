@@ -50,6 +50,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -71,19 +72,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     ArrayList<String> imagesLabels = new ArrayList<>();
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba, mGray;
-
-    /**
-     * Native methods that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native void YUV2RGB(long matAddrYUV, long matAddrRgba);
-
-    public native void HistEQ(long matAddrYUV, long matAddrRgba);
-
-    public native void TrainEigenfaces(long addrImages);
-
-    public native float[] EigenfacesDist(long addrImage);
     private Toast mToast;
+    private boolean useEigenfaces = true;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -98,6 +88,50 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         String label = string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1).trim().toLowerCase(Locale.US); // Make sure that the name is always uppercase and rest is lowercase
         imagesLabels.add(label); // Add label to list of labels
         Log.i(TAG, "Label: " + label);
+
+        trainFaces(); // When we have finishes setting the label, then retrain faces
+    }
+
+    private void trainFaces() {
+        if (images.isEmpty())
+            return; // The array might be empty if the method is changed in the OnClickListener
+
+        Mat imagesMatrix = new Mat((int) images.get(0).total(), images.size(), images.get(0).type());
+        for (int i = 0; i < images.size(); i++)
+            images.get(i).copyTo(imagesMatrix.col(i)); // Create matrix where each image is represented as a column vector
+
+        Log.i(TAG, "Images height: " + imagesMatrix.height() + " Width: " + imagesMatrix.width() + " total: " + imagesMatrix.total());
+
+        Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
+        String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
+
+        int[] classesNumbers = new int[uniqueLabels.length];
+        for (int i = 0; i < classesNumbers.length; i++)
+            classesNumbers[i] = i + 1; // Create incrementing list for each unique label starting at 1
+
+        int[] classes = new int[imagesLabels.size()];
+        for (int i = 0; i < imagesLabels.size(); i++) {
+            String label = imagesLabels.get(i);
+            for (int j = 0; j < uniqueLabels.length; j++) {
+                if (label.equals(uniqueLabels[j])) {
+                    classes[i] = classesNumbers[j]; // Insert corresponding number
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < imagesLabels.size(); i++)
+            Log.i(TAG, "Classes: " + imagesLabels.get(i) + " = " + classes[i]);
+
+        Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
+        vectorClasses.put(0, 0, classes); // Copy int array into a vector
+
+        // Train the face recognition algorithms in an asynchronous task, so we do not skip any frames
+        if (useEigenfaces)
+            new TrainEigenfacesTask().execute(imagesMatrix);
+        else
+            new TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
+
     }
 
     private void showEnterNameDialog() {
@@ -152,12 +186,16 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             @Override
             public void onClick(View v) {
                 showToast(getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT);
+                useEigenfaces = true;
+                trainFaces();
             }
         });
         findViewById(R.id.fisherfaces).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showToast(getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT);
+                useEigenfaces = false;
+                trainFaces();
             }
         });
 
@@ -208,8 +246,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
                 Mat image = mGray.reshape(0, (int) mGray.total()); // Create column vector
                 Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
+                images.add(image); // Add current image to the array
 
-                float[] dist = EigenfacesDist(image.getNativeObjAddr()); // Calculate normalized Euclidean distance
+                float[] dist = NativeMethods.MeasureDist(image, useEigenfaces); // Calculate normalized Euclidean distance
 
                 if (dist != null) {
                     float minDist = dist[0];
@@ -227,8 +266,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 } else
                     Log.e(TAG, "Array is NULL");
 
-                Set<String> uniqueLabels = new HashSet<>(imagesLabels); // Get all unique labels
-                if (!uniqueLabels.isEmpty()) { // Make sure that there are any labels
+                Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
+                if (!uniqueLabelsSet.isEmpty()) { // Make sure that there are any labels
                     // Inspired by: http://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
                     AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
                     builder.setTitle("Select label:");
@@ -241,9 +280,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     });
                     builder.setCancelable(false); // Prevent the user from closing the dialog
 
-                    String[] labels = uniqueLabels.toArray(new String[uniqueLabels.size()]); // Convert to String array for ArrayAdapter
-                    Arrays.sort(labels); // Sort labels alphabetically
-                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, labels);
+                    String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array for ArrayAdapter
+                    Arrays.sort(uniqueLabels); // Sort labels alphabetically
+                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, uniqueLabels);
                     ListView mListView = new ListView(FaceRecognitionAppActivity.this);
                     mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
                     builder.setView(mListView); // Set the ListView
@@ -259,16 +298,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     });
                 } else
                     showEnterNameDialog();
-
-                images.add(image); // Add current image to the array
-
-                Mat imagesMatrix = new Mat((int) image.total(), images.size(), image.type());
-                for (int i = 0; i < images.size(); i++)
-                    images.get(i).copyTo(imagesMatrix.col(i)); // Create matrix where each image is represented as a column vector
-
-                Log.i(TAG, "Images height: " + imagesMatrix.height() + " Width: " + imagesMatrix.width() + " total: " + imagesMatrix.total());
-
-                TrainEigenfaces(imagesMatrix.getNativeObjAddr());
             }
         });
 
