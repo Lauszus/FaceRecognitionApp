@@ -83,6 +83,16 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     public native void TrainEigenfaces(long addrImages);
 
     public native float[] EigenfacesDist(long addrImage);
+    private Toast mToast;
+
+    private void showToast(String message, int duration) {
+        if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
+            throw new IllegalArgumentException();
+        if (mToast != null)
+            mToast.cancel(); // Close the toast if it is already open
+        mToast = Toast.makeText(this, message, duration);
+        mToast.show();
+    }
 
     private void addLabel(String string) {
         String label = string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1).trim().toLowerCase(Locale.US); // Make sure that the name is always uppercase and rest is lowercase
@@ -141,13 +151,13 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         findViewById(R.id.eigenfaces).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(FaceRecognitionAppActivity.this, getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT).show();
+                showToast(getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT);
             }
         });
         findViewById(R.id.fisherfaces).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(FaceRecognitionAppActivity.this, getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT).show();
+                showToast(getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT);
             }
         });
 
@@ -212,7 +222,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     }
                     if (imagesLabels.size() > minIndex) { // Just to be sure
                         Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
-                        Toast.makeText(FaceRecognitionAppActivity.this, "Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG).show();
+                        showToast("Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG);
                     }
                 } else
                     Log.e(TAG, "Array is NULL");
@@ -275,7 +285,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     loadOpenCV();
                 } else {
-                    Toast.makeText(this, "Permission required!", Toast.LENGTH_LONG).show();
+                    showToast("Permission required!", Toast.LENGTH_LONG);
                     finish();
                 }
         }
