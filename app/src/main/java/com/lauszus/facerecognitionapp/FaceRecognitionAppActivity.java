@@ -198,6 +198,10 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 });
             }
         });
+
+        // Show keyboard, so the user can start typing straight away
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
         dialog.show();
     }
 
