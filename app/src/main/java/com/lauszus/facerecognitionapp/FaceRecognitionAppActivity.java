@@ -88,7 +88,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         imagesLabels.add(label); // Add label to list of labels
         Log.i(TAG, "Label: " + label);
 
-        trainFaces(); // When we have finishes setting the label, then retrain faces
+        trainFaces(); // When we have finished setting the label, then retrain faces
     }
 
     private void trainFaces() {
@@ -133,7 +133,42 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         }
     }
 
-    private void showEnterNameDialog() {
+    private void showLabelsDialog() {
+        Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
+        if (!uniqueLabelsSet.isEmpty()) { // Make sure that there are any labels
+            // Inspired by: http://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
+            AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
+            builder.setTitle("Select label:");
+            builder.setNegativeButton("New label", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    showEnterLabelDialog();
+                }
+            });
+            builder.setCancelable(false); // Prevent the user from closing the dialog
+
+            String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array for ArrayAdapter
+            Arrays.sort(uniqueLabels); // Sort labels alphabetically
+            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, uniqueLabels);
+            ListView mListView = new ListView(FaceRecognitionAppActivity.this);
+            mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
+            builder.setView(mListView); // Set the ListView
+
+            final AlertDialog dialog = builder.show(); // Show dialog and store in final variable, so it can be dismissed by the ListView
+
+            mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    dialog.dismiss();
+                    addLabel(arrayAdapter.getItem(position));
+                }
+            });
+        } else
+            showEnterLabelDialog(); // If there is no existing labels, then ask the user for a new label
+    }
+
+    private void showEnterLabelDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
         builder.setTitle("Please enter your name:");
 
@@ -250,38 +285,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     }
                 }).execute(image);
 
-                Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
-                if (!uniqueLabelsSet.isEmpty()) { // Make sure that there are any labels
-                    // Inspired by: http://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
-                    AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
-                    builder.setTitle("Select label:");
-                    builder.setNegativeButton("New label", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            showEnterNameDialog();
-                        }
-                    });
-                    builder.setCancelable(false); // Prevent the user from closing the dialog
-
-                    String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array for ArrayAdapter
-                    Arrays.sort(uniqueLabels); // Sort labels alphabetically
-                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, uniqueLabels);
-                    ListView mListView = new ListView(FaceRecognitionAppActivity.this);
-                    mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
-                    builder.setView(mListView); // Set the ListView
-
-                    final AlertDialog dialog = builder.show(); // Show dialog and store in final variable, so it can be dismissed by the ListView
-
-                    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            dialog.dismiss();
-                            addLabel(arrayAdapter.getItem(position));
-                        }
-                    });
-                } else
-                    showEnterNameDialog();
+                showLabelsDialog();
             }
         });
 
