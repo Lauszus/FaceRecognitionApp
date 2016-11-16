@@ -102,36 +102,36 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         Log.i(TAG, "Images height: " + imagesMatrix.height() + " Width: " + imagesMatrix.width() + " total: " + imagesMatrix.total());
 
-        Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
-        String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
-
-        int[] classesNumbers = new int[uniqueLabels.length];
-        for (int i = 0; i < classesNumbers.length; i++)
-            classesNumbers[i] = i + 1; // Create incrementing list for each unique label starting at 1
-
-        int[] classes = new int[imagesLabels.size()];
-        for (int i = 0; i < imagesLabels.size(); i++) {
-            String label = imagesLabels.get(i);
-            for (int j = 0; j < uniqueLabels.length; j++) {
-                if (label.equals(uniqueLabels[j])) {
-                    classes[i] = classesNumbers[j]; // Insert corresponding number
-                    break;
-                }
-            }
-        }
-
-        for (int i = 0; i < imagesLabels.size(); i++)
-            Log.i(TAG, "Classes: " + imagesLabels.get(i) + " = " + classes[i]);
-
-        Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
-        vectorClasses.put(0, 0, classes); // Copy int array into a vector
-
         // Train the face recognition algorithms in an asynchronous task, so we do not skip any frames
         if (useEigenfaces)
             new TrainEigenfacesTask().execute(imagesMatrix);
-        else
-            new TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
+        else {
+            Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
+            String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
 
+            int[] classesNumbers = new int[uniqueLabels.length];
+            for (int i = 0; i < classesNumbers.length; i++)
+                classesNumbers[i] = i + 1; // Create incrementing list for each unique label starting at 1
+
+            int[] classes = new int[imagesLabels.size()];
+            for (int i = 0; i < imagesLabels.size(); i++) {
+                String label = imagesLabels.get(i);
+                for (int j = 0; j < uniqueLabels.length; j++) {
+                    if (label.equals(uniqueLabels[j])) {
+                        classes[i] = classesNumbers[j]; // Insert corresponding number
+                        break;
+                    }
+                }
+            }
+
+            for (int i = 0; i < imagesLabels.size(); i++)
+                Log.i(TAG, "Classes: " + imagesLabels.get(i) + " = " + classes[i]);
+
+            Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
+            vectorClasses.put(0, 0, classes); // Copy int array into a vector
+
+            new TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
+        }
     }
 
     private void showEnterNameDialog() {
