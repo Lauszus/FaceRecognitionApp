@@ -43,7 +43,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -199,36 +198,17 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             }
         });
 
-        final SeekBarArrows thresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
-        thresholdFace.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        ((SeekBarArrows) findViewById(R.id.threshold_face)).setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                thresholdFace.onProgressChanged(seekBar, progress, fromUser);
-                Log.i(TAG, "Face threshold: " + thresholdFace.progressToString(progress));
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onProgressChanged(float progress) {
+                Log.i(TAG, "Face threshold: " + String.format(Locale.US, "%.1f", progress));
             }
         });
-        final SeekBarArrows thresholdDistance = (SeekBarArrows) findViewById(R.id.threshold_distance);
-        thresholdDistance.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                thresholdDistance.onProgressChanged(seekBar, progress, fromUser);
-                Log.i(TAG, "Distance threshold: " + thresholdDistance.progressToString(progress));
-            }
 
+        ((SeekBarArrows) findViewById(R.id.threshold_distance)).setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onProgressChanged(float progress) {
+                Log.i(TAG, "Distance threshold: " + String.format(Locale.US, "%.1f", progress));
             }
         });
 
