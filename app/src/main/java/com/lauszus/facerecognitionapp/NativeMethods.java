@@ -22,17 +22,46 @@ import android.os.AsyncTask;
 
 import org.opencv.core.Mat;
 
+// All computations is done in an asynchronous task, so we do not skip any frames
 class NativeMethods {
-    static void TrainEigenfaces(Mat images) {
-        TrainEigenfaces(images.getNativeObjAddr());
+    static class TrainEigenfacesTask extends AsyncTask<Mat, Void, Void> {
+        @Override
+        protected Void doInBackground(Mat... images) {
+            TrainEigenfaces(images[0].getNativeObjAddr());
+            return null;
+        }
     }
 
-    static void TrainFisherfaces(Mat images, Mat classes) {
-        TrainFisherfaces(images.getNativeObjAddr(), classes.getNativeObjAddr());
+    static class TrainFisherfacesTask extends AsyncTask<Mat, Void, Void> {
+        @Override
+        protected Void doInBackground(Mat... mat) {
+            TrainFisherfaces(mat[0].getNativeObjAddr(), mat[1].getNativeObjAddr());
+            return null;
+        }
     }
 
-    static float[] MeasureDist(Mat image, boolean useEigenfaces) {
-        return MeasureDist(image.getNativeObjAddr(), useEigenfaces);
+    static class MeasureDistTask extends AsyncTask<Mat, Void, float[]> {
+        private final Callback mCallback;
+        private final boolean useEigenfaces;
+
+        interface Callback {
+            void onMeasureDistComplete(float[] dist);
+        }
+
+        MeasureDistTask(boolean useEigenfaces, Callback callback) {
+            this.useEigenfaces = useEigenfaces;
+            mCallback = callback;
+        }
+
+        @Override
+        protected float[] doInBackground(Mat... mat) {
+            return MeasureDist(mat[0].getNativeObjAddr(), useEigenfaces);
+        }
+
+        @Override
+        protected void onPostExecute(float[] dist) {
+            mCallback.onMeasureDistComplete(dist);
+        }
     }
 
     /**
@@ -44,22 +73,4 @@ class NativeMethods {
     private static native void TrainFisherfaces(long addrImages, long addrClasses);
 
     private static native float[] MeasureDist(long addrImage, boolean useEigenfaces);
-}
-
-class TrainEigenfacesTask extends AsyncTask<Mat, Void, Void> {
-
-    @Override
-    protected Void doInBackground(Mat... images) {
-        NativeMethods.TrainEigenfaces(images[0]);
-        return null;
-    }
-}
-
-class TrainFisherfacesTask extends AsyncTask<Mat, Void, Void> {
-
-    @Override
-    protected Void doInBackground(Mat... mat) {
-        NativeMethods.TrainFisherfaces(mat[0], mat[1]);
-        return null;
-    }
 }

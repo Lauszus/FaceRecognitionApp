@@ -103,7 +103,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         // Train the face recognition algorithms in an asynchronous task, so we do not skip any frames
         if (useEigenfaces)
-            new TrainEigenfacesTask().execute(imagesMatrix);
+            new NativeMethods.TrainEigenfacesTask().execute(imagesMatrix);
         else {
             Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
             String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
@@ -129,7 +129,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
             vectorClasses.put(0, 0, classes); // Copy int array into a vector
 
-            new TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
+            new NativeMethods.TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
         }
     }
 
@@ -228,23 +228,27 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
                 images.add(image); // Add current image to the array
 
-                float[] dist = NativeMethods.MeasureDist(image, useEigenfaces); // Calculate normalized Euclidean distance
-
-                if (dist != null) {
-                    float minDist = dist[0];
-                    int minIndex = 0;
-                    for (int i = 1; i < dist.length; i++) {
-                        if (dist[i] < minDist) {
-                            minDist = dist[i];
-                            minIndex = i;
-                        }
+                // Calculate normalized Euclidean distance
+                new NativeMethods.MeasureDistTask(useEigenfaces, new NativeMethods.MeasureDistTask.Callback() {
+                    @Override
+                    public void onMeasureDistComplete(float[] dist) {
+                        if (dist != null) {
+                            float minDist = dist[0];
+                            int minIndex = 0;
+                            for (int i = 1; i < dist.length; i++) {
+                                if (dist[i] < minDist) {
+                                    minDist = dist[i];
+                                    minIndex = i;
+                                }
+                            }
+                            if (imagesLabels.size() > minIndex) { // Just to be sure
+                                Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
+                                showToast("Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG);
+                            }
+                        } else
+                            Log.e(TAG, "Array is NULL");
                     }
-                    if (imagesLabels.size() > minIndex) { // Just to be sure
-                        Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
-                        showToast("Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG);
-                    }
-                } else
-                    Log.e(TAG, "Array is NULL");
+                }).execute(image);
 
                 Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
                 if (!uniqueLabelsSet.isEmpty()) { // Make sure that there are any labels
