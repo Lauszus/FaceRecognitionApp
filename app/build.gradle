@@ -19,6 +19,14 @@ android {
         release
     }
     buildTypes {
+        debug {
+            jniDebuggable true
+            externalNativeBuild {
+                ndkBuild {
+                    arguments 'NDK_DEBUG=1', 'NDEBUG=null'
+                }
+            }
+        }
         release {
             shrinkResources true
             minifyEnabled true

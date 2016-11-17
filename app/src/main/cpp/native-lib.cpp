@@ -25,12 +25,18 @@
 #include <FaceRecognitionLib/Tools.h>
 #include <android/log.h>
 
+#ifdef NDEBUG
+#define LOGD(...) ((void)0)
+#define LOGI(...) ((void)0)
+#define LOGE(...) ((void)0)
+#define LOG_ASSERT(condition, ...) ((void)0)
+#else
 #define LOG_TAG "FaceRecognitionAppActivity/Native"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
-
 #define LOG_ASSERT(condition, ...) if (!(condition)) __android_log_assert(#condition, LOG_TAG, __VA_ARGS__)
+#endif
 
 Eigenfaces eigenfaces;
 Fisherfaces fisherfaces;

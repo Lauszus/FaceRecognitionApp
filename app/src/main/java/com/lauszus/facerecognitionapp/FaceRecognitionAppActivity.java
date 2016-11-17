@@ -77,7 +77,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
             throw new IllegalArgumentException();
-        if (mToast != null)
+        if (mToast != null && mToast.getView().isShown())
             mToast.cancel(); // Close the toast if it is already open
         mToast = Toast.makeText(this, message, duration);
         mToast.show();
@@ -285,7 +285,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                                 showToast("Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG);
                             }
                         } else
-                            Log.e(TAG, "Array is NULL");
+                            Log.w(TAG, "Array is null");
                     }
                 }).execute(image);
 
