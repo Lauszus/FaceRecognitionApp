@@ -30,6 +30,8 @@
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
 
+#define LOG_ASSERT(condition, ...) if (!(condition)) __android_log_assert(#condition, LOG_TAG, __VA_ARGS__)
+
 Eigenfaces eigenfaces;
 Fisherfaces fisherfaces;
 
@@ -45,7 +47,8 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFa
     Mat *pImages = (Mat *) addrImages; // Each images is represented as a column vector
     Mat *pClasses = (Mat *) addrClasses; // Classes are represented as a vector
 
-    MatrixXf images;
+    LOG_ASSERT(pImages->type() == CV_8U, "Images must be an 8-bit matrix");
+    MatrixXi images;
     cv2eigen(*pImages, images); // Copy from OpenCV Mat to Eigen matrix
 
     //Facebase *pFacebase;
@@ -54,8 +57,10 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFa
         LOGI("Eigenfacess numComponents: %d", eigenfaces.numComponents);
         //pFacebase = &eigenfaces;
     } else {
+        LOG_ASSERT(pClasses->type() == CV_32S && pClasses->cols == 1, "Classes must be a signed 32-bit vector");
         VectorXi classes;
-        cv2eigen(*pClasses, classes);
+        cv2eigen(*pClasses, classes); // Copy from OpenCV Mat to Eigen vector
+        LOG_ASSERT(classes.minCoeff() == 1, "Minimum value in the list must be 1");
         fisherfaces.train(images, classes); // Train Fisherfaces
         LOGI("Fisherfaces numComponents: %d", fisherfaces.numComponents);
         //pFacebase = &fisherfaces;
@@ -85,7 +90,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_
     if (pFacebase->V.any()) { // Make sure that the eigenvector has been calculated
         Mat *pImage = (Mat *) addrImage; // Image is represented as a column vector
 
-        VectorXf image;
+        VectorXi image;
         cv2eigen(*pImage, image); // Convert from OpenCV Mat to Eigen matrix
 
         LOGI("Reconstructing Faces");
