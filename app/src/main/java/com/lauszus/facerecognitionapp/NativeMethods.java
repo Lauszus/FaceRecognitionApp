@@ -24,24 +24,39 @@ import org.opencv.core.Mat;
 
 // All computations is done in an asynchronous task, so we do not skip any frames
 class NativeMethods {
-    static class TrainEigenfacesTask extends AsyncTask<Mat, Void, Void> {
-        @Override
-        protected Void doInBackground(Mat... images) {
-            TrainEigenfaces(images[0].getNativeObjAddr());
-            return null;
-        }
-    }
+    static class TrainFacesTask extends AsyncTask<Void, Void, Void> {
+        private final Mat images, classes;
 
-    static class TrainFisherfacesTask extends AsyncTask<Mat, Void, Void> {
+        /**
+         * Constructor used for Eigenfaces.
+         * @param images Matrix containing all images as column vectors.
+         */
+        TrainFacesTask(Mat images) {
+            this(images, null);
+        }
+
+        /**
+         * Constructor used for Fisherfaces.
+         * @param images  Matrix containing all images as column vectors.
+         * @param classes Vector containing classes for each image.
+         */
+        TrainFacesTask(Mat images, Mat classes) {
+            this.images = images;
+            this.classes = classes;
+        }
+
         @Override
-        protected Void doInBackground(Mat... mat) {
-            TrainFisherfaces(mat[0].getNativeObjAddr(), mat[1].getNativeObjAddr());
+        protected Void doInBackground(Void... params) {
+            if (classes == null)
+                TrainFaces(images.getNativeObjAddr(), 0); // Train Eigenfaces
+            else
+                TrainFaces(images.getNativeObjAddr(), classes.getNativeObjAddr()); // Train Fisherfaces
             return null;
         }
     }
 
     static class MeasureDistTask extends AsyncTask<Mat, Void, float[]> {
-        private final Callback mCallback;
+        private final Callback callback;
         private final boolean useEigenfaces;
 
         interface Callback {
@@ -50,7 +65,7 @@ class NativeMethods {
 
         MeasureDistTask(boolean useEigenfaces, Callback callback) {
             this.useEigenfaces = useEigenfaces;
-            mCallback = callback;
+            this.callback = callback;
         }
 
         @Override
@@ -60,17 +75,26 @@ class NativeMethods {
 
         @Override
         protected void onPostExecute(float[] dist) {
-            mCallback.onMeasureDistComplete(dist);
+            callback.onMeasureDistComplete(dist);
         }
     }
 
     /**
-     * Native methods that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
+     * Train faces recognition.
+     * @param addrImages    Address for matrix containing all images as column vectors.
+     * @param addrClasses   Address for vector containing classes for each image.
+     *                      This must be a incrementing list starting at 1.
+     *                      If set to NULL, then Eigenfaces will be used.
+     *                      If this is set, then Fisherfaces will be used.
      */
-    private static native void TrainEigenfaces(long addrImages);
+    private static native void TrainFaces(long addrImages, long addrClasses);
 
-    private static native void TrainFisherfaces(long addrImages, long addrClasses);
-
+    /**
+     * Measure euclidean distance between the weight of the image compared to all weights.
+     * @param addrImage     Vector containing the image.
+     * @param useEigenfaces Set to true if Eigenfaces are used. If set to false,
+     *                      then Fisherfaces will be used.
+     * @return              Returns an array of floats of all distances.
+     */
     private static native float[] MeasureDist(long addrImage, boolean useEigenfaces);
 }

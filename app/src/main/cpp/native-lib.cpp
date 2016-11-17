@@ -41,47 +41,34 @@ using namespace Eigen;
 extern "C" {
 #endif
 
-JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainEigenfaces(JNIEnv, jobject, jlong addrImages) {
+JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFaces(JNIEnv, jobject, jlong addrImages, jlong addrClasses) {
     Mat *pImages = (Mat *) addrImages; // Each images is represented as a column vector
+    Mat *pClasses = (Mat *) addrClasses; // Classes are represented as a vector
 
     MatrixXf images;
     cv2eigen(*pImages, images); // Copy from OpenCV Mat to Eigen matrix
 
-    eigenfaces.train(images); // Train Eigenfaces
-    LOGI("Eigenfacess numComponents: %d", eigenfaces.numComponents);
+    //Facebase *pFacebase;
+    if (pClasses == NULL) { // If classes are NULL, then train Eigenfaces
+        eigenfaces.train(images); // Train Eigenfaces
+        LOGI("Eigenfacess numComponents: %d", eigenfaces.numComponents);
+        //pFacebase = &eigenfaces;
+    } else {
+        VectorXi classes;
+        cv2eigen(*pClasses, classes);
+        fisherfaces.train(images, classes); // Train Fisherfaces
+        LOGI("Fisherfaces numComponents: %d", fisherfaces.numComponents);
+        //pFacebase = &fisherfaces;
+    }
 
     /*
-    if (!eigenfaces.V.hasNaN()) {
-        for (int i = 0; i < eigenfaces.numComponents; i++) { // Loop through Eigenfaces
+    if (!pFacebase->V.hasNaN()) {
+        for (int i = 0; i < pFacebase->numComponents; i++) { // Loop through eigenvectors
             for (int j = 0; j < 10; j++) // Print first 10 values
-                LOGI("Eigenface[%d]: %f", i, eigenfaces.V(j, i));
+                LOGI("Eigenvector[%d]: %f", i, pFacebase->V(j, i));
         }
     } else
-        LOGE("Eigenfaces are not valid!");
-    */
-}
-
-JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFisherfaces(JNIEnv, jobject, jlong addrImages, jlong addrClasses) {
-    Mat *pImages = (Mat *) addrImages; // Each images is represented as a column vector
-    Mat *pClasses = (Mat *) addrClasses; // Classes are represented as a vector
-
-    // Copy from OpenCV Mat to Eigen matrix
-    MatrixXf images;
-    cv2eigen(*pImages, images);
-    VectorXi classes;
-    cv2eigen(*pClasses, classes);
-
-    fisherfaces.train(images, classes); // Train Fisherfaces
-    LOGI("Fisherfaces numComponents: %d", fisherfaces.numComponents);
-
-    /*
-    if (!fisherfaces.V.hasNaN()) {
-        for (int i = 0; i < fisherfaces.numComponents; i++) { // Loop through Eigenfaces
-            for (int j = 0; j < 10; j++) // Print first 10 values
-                LOGI("Fisherface[%d]: %f", i, fisherfaces.V(j, i));
-        }
-    } else
-        LOGE("Fisherfaces are not valid!");
+        LOGE("Eigenvectors are not valid!");
     */
 }
 

@@ -103,7 +103,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         // Train the face recognition algorithms in an asynchronous task, so we do not skip any frames
         if (useEigenfaces)
-            new NativeMethods.TrainEigenfacesTask().execute(imagesMatrix);
+            new NativeMethods.TrainFacesTask(imagesMatrix).execute();
         else {
             Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
             String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
@@ -123,13 +123,13 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 }
             }
 
-            for (int i = 0; i < imagesLabels.size(); i++)
-                Log.i(TAG, "Classes: " + imagesLabels.get(i) + " = " + classes[i]);
+            /*for (int i = 0; i < imagesLabels.size(); i++)
+                Log.i(TAG, "Classes: " + imagesLabels.get(i) + " = " + classes[i]);*/
 
             Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
             vectorClasses.put(0, 0, classes); // Copy int array into a vector
 
-            new NativeMethods.TrainFisherfacesTask().execute(imagesMatrix, vectorClasses);
+            new NativeMethods.TrainFacesTask(imagesMatrix, vectorClasses).execute();
         }
     }
 
