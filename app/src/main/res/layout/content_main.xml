@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:CameraBridgeViewBase="http://schemas.android.com/apk/res-auto"
     android:id="@+id/content_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".FaceRecognitionAppActivity"
     tools:showIn="@layout/app_bar_main">
-
-    <!--CameraBridgeViewBase:show_fps="true"-->
-    <com.lauszus.facerecognitionapp.JavaCameraView
-        CameraBridgeViewBase:camera_id="front"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/camera_java_surface_view" />
 
     <LinearLayout
         style="?metaButtonBarStyle"
