@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -37,12 +38,14 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -150,7 +153,17 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
             String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array for ArrayAdapter
             Arrays.sort(uniqueLabels); // Sort labels alphabetically
-            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, uniqueLabels);
+            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(FaceRecognitionAppActivity.this, android.R.layout.simple_list_item_1, uniqueLabels) {
+                @Override
+                public @NonNull View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                    TextView textView = (TextView) super.getView(position, convertView, parent);
+                    if (getResources().getBoolean(R.bool.isTablet))
+                        textView.setTextSize(20); // Make text slightly bigger on tablets compared to phones
+                    else
+                        textView.setTextSize(18); // Increase text size a little bit
+                    return textView;
+                }
+            };
             ListView mListView = new ListView(FaceRecognitionAppActivity.this);
             mListView.setAdapter(arrayAdapter); // Set adapter, so the items actually show up
             builder.setView(mListView); // Set the ListView
