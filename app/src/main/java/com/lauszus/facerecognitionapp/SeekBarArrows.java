@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -32,9 +33,11 @@ import android.widget.TextView;
 import java.util.Locale;
 
 public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChangeListener {
+    private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName() + "/" + SeekBarArrows.class.getSimpleName();
     private SeekBar mSeekBar;
     private TextView mSeekBarValue;
     private float multiplier;
+    private int nValues;
 
     public SeekBarArrows(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -45,15 +48,15 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
 
         String mSeekBarText = styledAttrs.getString(R.styleable.SeekBarArrows_text);
         float max = styledAttrs.getFloat(R.styleable.SeekBarArrows_max, 0);
-        multiplier = styledAttrs.getFloat(R.styleable.SeekBarArrows_multiplier, 0);
+        nValues = styledAttrs.getInt(R.styleable.SeekBarArrows_n_values, 0);
 
         mSeekBar = (SeekBar) findViewById(R.id.seekBar);
         ((TextView) findViewById(R.id.text)).setText(mSeekBarText);
         mSeekBarValue = (TextView) findViewById(R.id.value);
 
-        mSeekBar.setMax((int) (max / multiplier));
-        mSeekBar.setOnSeekBarChangeListener(this);
-        mSeekBar.setProgress(mSeekBar.getMax() / 2); // Call this after the OnSeekBarChangeListener is created
+        setMax(max); // Set maximum value
+        mSeekBar.setOnSeekBarChangeListener(this); // Set listener
+        mSeekBar.setProgress(mSeekBar.getMax() / 2); // Now center the SeekBar
 
         // Use custom OnArrowListener class to handle button click, button long click and if the button is held down
         new OnArrowListener(findViewById(R.id.rightArrow), mSeekBar, true);
@@ -80,16 +83,35 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         mSeekBar.setProgress((int) (value / multiplier));
     }
 
-    private String progressToString(int value) {
-        final String format = multiplier == 0.00001f ? "%.5f" : multiplier == 0.0001f ? "%.4f" : multiplier == 0.001f ? "%.3f" : multiplier == 0.01f ? "%.2f" : multiplier == 0.1f ? "%.1f" : "%.0f"; // Set decimal places according to divider
-        return String.format(Locale.US, format, (float) value * multiplier); // SeekBar can only handle integers, so format it to a float with two decimal places
+    public float getMax() {
+        return mSeekBar.getMax() * multiplier;
+    }
+
+    public void setMax(float max) {
+        multiplier = max / (float)nValues;
+        mSeekBar.setMax((int) (max / multiplier));
+        Log.i(TAG, "Max: " + max + " Raw: " + mSeekBar.getMax() + " Multiplier: " + multiplier);
+    }
+
+    private String getFormat() {
+        return multiplier <= 0.00001f ? "%.5f" : multiplier <= 0.0001f ? "%.4f" : multiplier <= 0.001f ? "%.3f" : multiplier <= 0.01f ? "%.2f" : multiplier <= 0.1f ? "%.1f" : "%.0f";
+    }
+
+    public String progressToString(float value) {
+        String format = getFormat(); // Set decimal places according to multiplier
+        return String.format(Locale.US, format, value);
+    }
+
+    public String progressToString(int value) {
+        String format = getFormat(); // Set decimal places according to multiplier
+        return String.format(Locale.US, format, (float)value * multiplier); // SeekBar can only handle integers, so format it to a float
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         mSeekBarValue.setText(progressToString(progress));
         if (mOnSeekBarArrowsChangeListener != null)
-            mOnSeekBarArrowsChangeListener.onProgressChanged(progress * multiplier);
+            mOnSeekBarArrowsChangeListener.onProgressChanged((float)progress * multiplier);
     }
 
     @Override

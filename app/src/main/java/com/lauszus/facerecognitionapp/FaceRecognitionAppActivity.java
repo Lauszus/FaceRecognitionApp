@@ -20,10 +20,13 @@ package com.lauszus.facerecognitionapp;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -76,6 +79,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private Mat mRgba, mGray;
     private Toast mToast;
     private boolean useEigenfaces = true;
+    private SeekBarArrows mThresholdFace, mThresholdDistance;
+    private float faceThreshold, distanceThreshold;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -250,19 +255,25 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             }
         });
 
-        ((SeekBarArrows) findViewById(R.id.threshold_face)).setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
+        mThresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
+        mThresholdFace.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
             public void onProgressChanged(float progress) {
-                Log.i(TAG, "Face threshold: " + String.format(Locale.US, "%.1f", progress));
+                Log.i(TAG, "Face threshold: " + mThresholdFace.progressToString(progress));
+                faceThreshold = progress;
             }
         });
+        faceThreshold = mThresholdFace.getProgress(); // Get initial value
 
-        ((SeekBarArrows) findViewById(R.id.threshold_distance)).setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
+        mThresholdDistance = (SeekBarArrows) findViewById(R.id.threshold_distance);
+        mThresholdDistance.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
             public void onProgressChanged(float progress) {
-                Log.i(TAG, "Distance threshold: " + String.format(Locale.US, "%.1f", progress));
+                Log.i(TAG, "Distance threshold: " + mThresholdDistance.progressToString(progress));
+                distanceThreshold = progress;
             }
         });
+        distanceThreshold = mThresholdDistance.getProgress(); // Get initial value
 
         images.clear(); // Clear both arrays, when new instance is created
         imagesLabels.clear();
@@ -294,8 +305,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                                 }
                             }
                             if (imagesLabels.size() > minIndex) { // Just to be sure
-                                Log.i(TAG, "dist[" + minIndex + "]: " + dist[minIndex] + " - label: " + imagesLabels.get(minIndex));
-                                showToast("Closest match: " + imagesLabels.get(minIndex), Toast.LENGTH_LONG);
+                                Log.i(TAG, "dist[" + minIndex + "]: " + minDist + " - label: " + imagesLabels.get(minIndex));
+                                if (minDist < distanceThreshold)
+                                    showToast("Closest match: " + imagesLabels.get(minIndex) + ". Distance: " + String.format(Locale.US, "%.4f", minDist), Toast.LENGTH_LONG);
+                                else
+                                    showToast("Unknown face. Closest distance: " + String.format(Locale.US, "%.4f", minDist), Toast.LENGTH_LONG);
                             }
                         } else
                             Log.w(TAG, "Array is null");
@@ -330,6 +344,29 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Read threshold values
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        float progress = prefs.getFloat("faceThreshold", -1);
+        if (progress != -1)
+            mThresholdFace.setProgress(progress);
+        progress = prefs.getFloat("distanceThreshold", -1);
+        if (progress != -1)
+            mThresholdDistance.setProgress(progress);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // Store threshold values
+        Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putFloat("faceThreshold", faceThreshold);
+        editor.putFloat("distanceThreshold", distanceThreshold);
+        editor.apply();
     }
 
     @Override
