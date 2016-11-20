@@ -20,7 +20,7 @@ Both can be installed manually like so:
 ```bash
 wget https://github.com/opencv/opencv/releases/download/3.1.0/OpenCV-3.1.0-android-sdk.zip
 unzip OpenCV-3.1.0-android-sdk.zip
-wget http://bitbucket.org/eigen/eigen/get/3.2.10.zip -O Eigen3.zip
+wget https://bitbucket.org/eigen/eigen/get/3.3.0.zip -O Eigen3.zip
 unzip Eigen3.zip
 ```
 
