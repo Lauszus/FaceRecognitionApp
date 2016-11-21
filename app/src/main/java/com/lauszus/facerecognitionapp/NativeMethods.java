@@ -61,7 +61,8 @@ class NativeMethods {
     }
 
     static class MeasureDistTask extends AsyncTask<Mat, Void, Bundle> {
-        static final String DIST_ARRAY_FLOAT = "dist";
+        static final String MIN_DIST_FLOAT = "minDist";
+        static final String MIN_DIST_INDEX_INT = "minDistIndex";
         static final String DIST_FACE_FLOAT = "distFace";
 
         private final Callback callback;
@@ -78,10 +79,13 @@ class NativeMethods {
 
         @Override
         protected Bundle doInBackground(Mat... mat) {
+            float[] minDist = new float[] { -1 };
+            int[] minDistIndex = new int[1];
             float[] faceDist = new float[1];
-            float[] dist = MeasureDist(mat[0].getNativeObjAddr(), faceDist, useEigenfaces);
+            MeasureDist(mat[0].getNativeObjAddr(), minDist, minDistIndex, faceDist, useEigenfaces);
             Bundle bundle = new Bundle();
-            bundle.putFloatArray(DIST_ARRAY_FLOAT, dist);
+            bundle.putFloat(MIN_DIST_FLOAT, minDist[0]);
+            bundle.putInt(MIN_DIST_INDEX_INT, minDistIndex[0]);
             bundle.putFloat(DIST_FACE_FLOAT, faceDist[0]);
             return bundle;
         }
@@ -109,5 +113,5 @@ class NativeMethods {
      *                      then Fisherfaces will be used.
      * @return              Returns an array of floats of all distances.
      */
-    private static native float[] MeasureDist(long addrImage, float[] distFace, boolean useEigenfaces);
+    private static native void MeasureDist(long addrImage, float[] minDist, int[] minDistIndex, float[] faceDist, boolean useEigenfaces);
 }

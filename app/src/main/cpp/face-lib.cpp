@@ -83,7 +83,7 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFa
     */
 }
 
-JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_MeasureDist(JNIEnv *env, jobject, jlong addrImage, jfloatArray faceDist, jboolean useEigenfaces) {
+JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_MeasureDist(JNIEnv *env, jobject, jlong addrImage, jfloatArray minDist, jintArray minDistIndex, jfloatArray faceDist, jboolean useEigenfaces) {
     Facebase *pFacebase;
     if (useEigenfaces) {
         LOGI("Using Eigenfaces");
@@ -114,11 +114,10 @@ JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_
         for (auto idx : sortedIdx)
             LOGI("dist[%zu]: %f", idx, dist(idx));
 
-        jfloatArray floatArray = env->NewFloatArray(dist.rows());
-        env->SetFloatArrayRegion(floatArray, 0, dist.rows(), dist.data()); // Copy data into array
-        return floatArray;
+        int minIndex = (int) sortedIdx[0];
+        env->SetFloatArrayRegion(minDist, 0, 1, &dist(minIndex));
+        env->SetIntArrayRegion(minDistIndex, 0, 1, &(minIndex));
     }
-    return NULL;
 }
 
 static inline void convertYUVToRGBA(uint8_t y, uint8_t u, uint8_t v, uint8_t *buf) __attribute__((always_inline));

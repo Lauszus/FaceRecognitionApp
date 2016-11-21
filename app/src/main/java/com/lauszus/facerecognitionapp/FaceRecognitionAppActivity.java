@@ -148,11 +148,18 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             // Inspired by: http://stackoverflow.com/questions/15762905/how-can-i-display-a-list-view-in-an-android-alert-dialog
             AlertDialog.Builder builder = new AlertDialog.Builder(FaceRecognitionAppActivity.this);
             builder.setTitle("Select label:");
-            builder.setNegativeButton("New label", new DialogInterface.OnClickListener() {
+            builder.setPositiveButton("New face", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
                     showEnterLabelDialog();
+                }
+            });
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    images.remove(images.size() - 1); // Remove last image
                 }
             });
             builder.setCancelable(false); // Prevent the user from closing the dialog
@@ -196,6 +203,13 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         builder.setView(input);
 
         builder.setPositiveButton("Submit", null); // Set up positive button, but do not provide a listener, so we can check the string before dismissing the dialog
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                images.remove(images.size() - 1); // Remove last image
+            }
+        });
         builder.setCancelable(false); // User has to input a name
         AlertDialog dialog = builder.create();
 
@@ -299,18 +313,10 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 new NativeMethods.MeasureDistTask(useEigenfaces, new NativeMethods.MeasureDistTask.Callback() {
                     @Override
                     public void onMeasureDistComplete(Bundle bundle) {
-                        float[] dist = bundle.getFloatArray(NativeMethods.MeasureDistTask.DIST_ARRAY_FLOAT);
-                        if (dist != null) {
+                        float minDist = bundle.getFloat(NativeMethods.MeasureDistTask.MIN_DIST_FLOAT);
+                        if (minDist != -1) {
+                            int minIndex = bundle.getInt(NativeMethods.MeasureDistTask.MIN_DIST_INDEX_INT);
                             float faceDist = bundle.getFloat(NativeMethods.MeasureDistTask.DIST_FACE_FLOAT);
-
-                            float minDist = dist[0];
-                            int minIndex = 0;
-                            for (int i = 1; i < dist.length; i++) {
-                                if (dist[i] < minDist) {
-                                    minDist = dist[i];
-                                    minIndex = i;
-                                }
-                            }
                             if (imagesLabels.size() > minIndex) { // Just to be sure
                                 Log.i(TAG, "dist[" + minIndex + "]: " + minDist + ", face dist: " + faceDist + ", label: " + imagesLabels.get(minIndex));
 
@@ -318,7 +324,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                                 String faceDistString = String.format(Locale.US, "%.4f", faceDist);
 
                                 if (faceDist < faceThreshold && minDist < distanceThreshold) // 1. Near face space and near a face class
-                                    showToast("Closest match: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
+                                    showToast("Face detected: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
                                 else if (faceDist < faceThreshold) // 2. Near face space but not near a known face class
                                     showToast("Unknown face. Closest distance: " + minDistString, Toast.LENGTH_LONG);
                                 else if (minDist < distanceThreshold) // 3. Distant from face space and near a face class
