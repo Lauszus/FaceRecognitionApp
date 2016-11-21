@@ -400,7 +400,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         public void onManagerConnected(int status) {
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
-                    System.loadLibrary("native-lib"); // Load native library after(!) OpenCV initialization
+                    NativeMethods.loadNativeLibraries(); // Load native libraries after(!) OpenCV initialization
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
                     break;

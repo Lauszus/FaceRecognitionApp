@@ -25,6 +25,10 @@ import org.opencv.core.Mat;
 
 // All computations is done in an asynchronous task, so we do not skip any frames
 class NativeMethods {
+    static void loadNativeLibraries() {
+        System.loadLibrary("face-lib");
+    }
+
     static class TrainFacesTask extends AsyncTask<Void, Void, Void> {
         private final Mat images, classes;
 
