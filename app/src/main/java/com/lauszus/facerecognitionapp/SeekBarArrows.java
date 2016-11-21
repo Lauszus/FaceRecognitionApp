@@ -89,7 +89,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
 
     public void setMax(float max) {
         multiplier = max / (float)nValues;
-        mSeekBar.setMax((int) (max / multiplier));
+        mSeekBar.setMax(nValues);
         Log.i(TAG, "Max: " + max + " Raw: " + mSeekBar.getMax() + " Multiplier: " + multiplier);
     }
 

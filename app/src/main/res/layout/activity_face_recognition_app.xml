@@ -63,16 +63,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     SeekBarArrows:text="@string/threshold_face"
-                    SeekBarArrows:max="1"
-                    SeekBarArrows:n_values="1000" />
+                    SeekBarArrows:max=".5"
+                    SeekBarArrows:n_values="500" />
 
                 <com.lauszus.facerecognitionapp.SeekBarArrows
                     android:id="@+id/threshold_distance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     SeekBarArrows:text="@string/threshold_distance"
-                    SeekBarArrows:max="1"
-                    SeekBarArrows:n_values="1000" />
+                    SeekBarArrows:max=".5"
+                    SeekBarArrows:n_values="500" />
 
             </LinearLayout>
 
