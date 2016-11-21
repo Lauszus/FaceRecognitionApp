@@ -294,8 +294,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 // Calculate normalized Euclidean distance
                 new NativeMethods.MeasureDistTask(useEigenfaces, new NativeMethods.MeasureDistTask.Callback() {
                     @Override
-                    public void onMeasureDistComplete(float[] dist) {
+                    public void onMeasureDistComplete(Bundle bundle) {
+                        float[] dist = bundle.getFloatArray(NativeMethods.MeasureDistTask.DIST_ARRAY_FLOAT);
                         if (dist != null) {
+                            float faceDist = bundle.getFloat(NativeMethods.MeasureDistTask.DIST_FACE_FLOAT);
+
                             float minDist = dist[0];
                             int minIndex = 0;
                             for (int i = 1; i < dist.length; i++) {
@@ -305,11 +308,19 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                                 }
                             }
                             if (imagesLabels.size() > minIndex) { // Just to be sure
-                                Log.i(TAG, "dist[" + minIndex + "]: " + minDist + " - label: " + imagesLabels.get(minIndex));
-                                if (minDist < distanceThreshold)
-                                    showToast("Closest match: " + imagesLabels.get(minIndex) + ". Distance: " + String.format(Locale.US, "%.4f", minDist), Toast.LENGTH_LONG);
-                                else
-                                    showToast("Unknown face. Closest distance: " + String.format(Locale.US, "%.4f", minDist), Toast.LENGTH_LONG);
+                                Log.i(TAG, "dist[" + minIndex + "]: " + minDist + ", face dist: " + faceDist + ", label: " + imagesLabels.get(minIndex));
+
+                                String minDistString = String.format(Locale.US, "%.4f", minDist);
+                                String faceDistString = String.format(Locale.US, "%.4f", faceDist);
+
+                                if (faceDist < faceThreshold && minDist < distanceThreshold) // 1. Near face space and near a face class
+                                    showToast("Closest match: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
+                                else if (faceDist < faceThreshold) // 2. Near face space but not near a known face class
+                                    showToast("Unknown face. Closest distance: " + minDistString, Toast.LENGTH_LONG);
+                                else if (minDist < distanceThreshold) // 3. Distant from face space and near a face class
+                                    showToast("False recognition. Face distance: " + faceDistString, Toast.LENGTH_LONG);
+                                else // 4. Distant from face space and not near a known face class.
+                                    showToast("Image is not a face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
                             }
                         } else
                             Log.w(TAG, "Array is null");

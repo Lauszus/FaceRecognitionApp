@@ -19,6 +19,7 @@
 package com.lauszus.facerecognitionapp;
 
 import android.os.AsyncTask;
+import android.os.Bundle;
 
 import org.opencv.core.Mat;
 
@@ -55,12 +56,15 @@ class NativeMethods {
         }
     }
 
-    static class MeasureDistTask extends AsyncTask<Mat, Void, float[]> {
+    static class MeasureDistTask extends AsyncTask<Mat, Void, Bundle> {
+        static final String DIST_ARRAY_FLOAT = "dist";
+        static final String DIST_FACE_FLOAT = "distFace";
+
         private final Callback callback;
         private final boolean useEigenfaces;
 
         interface Callback {
-            void onMeasureDistComplete(float[] dist);
+            void onMeasureDistComplete(Bundle bundle);
         }
 
         MeasureDistTask(boolean useEigenfaces, Callback callback) {
@@ -69,13 +73,18 @@ class NativeMethods {
         }
 
         @Override
-        protected float[] doInBackground(Mat... mat) {
-            return MeasureDist(mat[0].getNativeObjAddr(), useEigenfaces);
+        protected Bundle doInBackground(Mat... mat) {
+            float[] faceDist = new float[1];
+            float[] dist = MeasureDist(mat[0].getNativeObjAddr(), faceDist, useEigenfaces);
+            Bundle bundle = new Bundle();
+            bundle.putFloatArray(DIST_ARRAY_FLOAT, dist);
+            bundle.putFloat(DIST_FACE_FLOAT, faceDist[0]);
+            return bundle;
         }
 
         @Override
-        protected void onPostExecute(float[] dist) {
-            callback.onMeasureDistComplete(dist);
+        protected void onPostExecute(Bundle bundle) {
+            callback.onMeasureDistComplete(bundle);
         }
     }
 
@@ -96,5 +105,5 @@ class NativeMethods {
      *                      then Fisherfaces will be used.
      * @return              Returns an array of floats of all distances.
      */
-    private static native float[] MeasureDist(long addrImage, boolean useEigenfaces);
+    private static native float[] MeasureDist(long addrImage, float[] distFace, boolean useEigenfaces);
 }

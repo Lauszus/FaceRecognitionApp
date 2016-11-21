@@ -83,7 +83,7 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_TrainFa
     */
 }
 
-JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_MeasureDist(JNIEnv *env, jobject, jlong addrImage, jboolean useEigenfaces) {
+JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_MeasureDist(JNIEnv *env, jobject, jlong addrImage, jfloatArray faceDist, jboolean useEigenfaces) {
     Facebase *pFacebase;
     if (useEigenfaces) {
         LOGI("Using Eigenfaces");
@@ -101,13 +101,17 @@ JNIEXPORT jfloatArray JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_
 
         LOGI("Reconstructing Faces");
         VectorXf W = pFacebase->project(image); // Project onto subspace
-        //VectorXf face = pFacebase->reconstructFace(W);
+        VectorXf face = pFacebase->reconstructFace(W);
 
         LOGI("Calculate normalized Euclidean distance");
+        jfloat dist_face = pFacebase->euclideanDistFace(image, face);
+        LOGI("Face distance: %f", dist_face);
+        env->SetFloatArrayRegion(faceDist, 0, 1, &dist_face);
+
         VectorXf dist = pFacebase->euclideanDist(W);
 
-        vector<size_t> soredIdx = sortIndexes(dist);
-        for (auto idx : soredIdx)
+        vector<size_t> sortedIdx = sortIndexes(dist);
+        for (auto idx : sortedIdx)
             LOGI("dist[%zu]: %f", idx, dist(idx));
 
         jfloatArray floatArray = env->NewFloatArray(dist.rows());
@@ -177,7 +181,6 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_HistEQ(
 
     // Step 2: Compute CDF of histogram
     uint32_t histogram_cdf[256];
-    memset(histogram_cdf, 0, sizeof(histogram_cdf));
 
     histogram_cdf[0] = histogram[0];
     for (int i = 1; i < 256; i++)
