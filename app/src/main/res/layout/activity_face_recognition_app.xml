@@ -42,19 +42,19 @@
                     android:orientation="horizontal">
 
                     <RadioButton
-                        android:id="@+id/eigenfaces"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        android:text="@string/eigenfaces" />
-
-                    <RadioButton
                         android:id="@+id/fisherfaces"
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
+                        android:checked="true"
                         android:text="@string/fisherfaces" />
+
+                    <RadioButton
+                        android:id="@+id/eigenfaces"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/eigenfaces" />
 
                 </RadioGroup>
 

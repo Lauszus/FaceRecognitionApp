@@ -48,6 +48,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,7 +79,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba, mGray;
     private Toast mToast;
-    private boolean useEigenfaces = true;
+    private boolean useEigenfaces;
     private SeekBarArrows mThresholdFace, mThresholdDistance;
     private float faceThreshold, distanceThreshold;
 
@@ -238,7 +239,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        findViewById(R.id.eigenfaces).setOnClickListener(new View.OnClickListener() {
+        RadioButton mRadioButtonEigenfaces = (RadioButton) findViewById(R.id.eigenfaces);
+        mRadioButtonEigenfaces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showToast(getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT);
@@ -246,6 +248,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 trainFaces();
             }
         });
+        useEigenfaces = mRadioButtonEigenfaces.isChecked(); // Set default state
+
         findViewById(R.id.fisherfaces).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
