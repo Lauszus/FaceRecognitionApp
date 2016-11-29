@@ -74,6 +74,13 @@
                     SeekBarArrows:max=".5"
                     SeekBarArrows:n_values="500" />
 
+                <Button
+                    android:id="@+id/clear_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/arrow_text_margin"
+                    android:text="@string/clear_button" />
+
             </LinearLayout>
 
         </LinearLayout>

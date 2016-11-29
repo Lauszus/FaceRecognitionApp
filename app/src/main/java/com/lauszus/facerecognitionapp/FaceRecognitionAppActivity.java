@@ -74,8 +74,8 @@ import java.util.Set;
 public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
-    ArrayList<Mat> images = new ArrayList<>();
-    ArrayList<String> imagesLabels = new ArrayList<>();
+    ArrayList<Mat> images;
+    ArrayList<String> imagesLabels;
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba, mGray;
     private Toast mToast;
@@ -300,8 +300,14 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
         distanceThreshold = mThresholdDistance.getProgress(); // Get initial value
 
-        images.clear(); // Clear both arrays, when new instance is created
-        imagesLabels.clear();
+        findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i(TAG, "Cleared training set");
+                images.clear(); // Clear both arrays, when new instance is created
+                imagesLabels.clear();
+            }
+        });
 
         findViewById(R.id.take_picture_button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -395,6 +401,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         editor.putFloat("distanceThreshold", distanceThreshold);
         editor.putBoolean("useEigenfaces", useEigenfaces);
         editor.apply();
+
+        // Store ArrayLists containing the images and labels
+        TinyDB tinydb = new TinyDB(FaceRecognitionAppActivity.this);
+        tinydb.putListMat("images", images);
+        tinydb.putListString("imagesLabels", imagesLabels);
     }
 
     @Override
@@ -416,6 +427,16 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     NativeMethods.loadNativeLibraries(); // Load native libraries after(!) OpenCV initialization
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
+
+                    // Read images and labels from shared preferences
+                    TinyDB tinydb = new TinyDB(FaceRecognitionAppActivity.this);
+                    images = tinydb.getListMat("images");
+                    imagesLabels = tinydb.getListString("imagesLabels");
+
+                    Log.i(TAG, "Number of images: " + images.size()  + ". Number of labels: " + imagesLabels.size());
+                    if (!images.isEmpty())
+                        Log.i(TAG, "Images height: " + images.get(0).height() + " Width: " + images.get(0).width() + " total: " + images.get(0).total());
+                    Log.i(TAG, "Labels: " + imagesLabels);
                     break;
                 default:
                     super.onManagerConnected(status);
