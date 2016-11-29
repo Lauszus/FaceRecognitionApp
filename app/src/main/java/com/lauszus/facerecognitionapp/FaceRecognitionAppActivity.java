@@ -82,6 +82,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private boolean useEigenfaces;
     private SeekBarArrows mThresholdFace, mThresholdDistance;
     private float faceThreshold, distanceThreshold;
+    private SharedPreferences prefs;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -262,9 +263,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 trainFaces();
             }
         });
-        useEigenfaces = mRadioButtonEigenfaces.isChecked(); // Set default state
 
-        findViewById(R.id.fisherfaces).setOnClickListener(new View.OnClickListener() {
+        RadioButton mRadioButtonFisherfaces = (RadioButton) findViewById(R.id.fisherfaces);
+        mRadioButtonFisherfaces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showToast(getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT);
@@ -272,6 +273,12 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 trainFaces();
             }
         });
+
+        // Set radio button based on value stored in shared preferences
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        useEigenfaces = prefs.getBoolean("useEigenfaces", false);
+        mRadioButtonEigenfaces.setChecked(useEigenfaces);
+        mRadioButtonFisherfaces.setChecked(!useEigenfaces);
 
         mThresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
         mThresholdFace.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
@@ -371,7 +378,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     public void onStart() {
         super.onStart();
         // Read threshold values
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         float progress = prefs.getFloat("faceThreshold", -1);
         if (progress != -1)
             mThresholdFace.setProgress(progress);
@@ -384,9 +390,10 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     public void onStop() {
         super.onStop();
         // Store threshold values
-        Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        Editor editor = prefs.edit();
         editor.putFloat("faceThreshold", faceThreshold);
         editor.putFloat("distanceThreshold", distanceThreshold);
+        editor.putBoolean("useEigenfaces", useEigenfaces);
         editor.apply();
     }
 
@@ -485,7 +492,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         boolean bool = Imgcodecs.imwrite(file.toString(), mIntermediateMat);
 
         if (bool)
-            Log.d(TAG, "SUCCESS writing image to external storage");
+            Log.i(TAG, "SUCCESS writing image to external storage");
         else
             Log.e(TAG, "Failed writing image to external storage");
     }
