@@ -83,6 +83,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private SeekBarArrows mThresholdFace, mThresholdDistance;
     private float faceThreshold, distanceThreshold;
     private SharedPreferences prefs;
+    private TinyDB tinydb;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -280,6 +281,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         mRadioButtonEigenfaces.setChecked(useEigenfaces);
         mRadioButtonFisherfaces.setChecked(!useEigenfaces);
 
+        tinydb = new TinyDB(this); // Used to store ArrayLists in the shared preferences
+
         mThresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
         mThresholdFace.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
@@ -403,9 +406,10 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         editor.apply();
 
         // Store ArrayLists containing the images and labels
-        TinyDB tinydb = new TinyDB(FaceRecognitionAppActivity.this);
-        tinydb.putListMat("images", images);
-        tinydb.putListString("imagesLabels", imagesLabels);
+        if (images != null && imagesLabels != null) {
+            tinydb.putListMat("images", images);
+            tinydb.putListString("imagesLabels", imagesLabels);
+        }
     }
 
     @Override
@@ -429,7 +433,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     mOpenCvCameraView.enableView();
 
                     // Read images and labels from shared preferences
-                    TinyDB tinydb = new TinyDB(FaceRecognitionAppActivity.this);
                     images = tinydb.getListMat("images");
                     imagesLabels = tinydb.getListString("imagesLabels");
 
