@@ -342,9 +342,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                                 if (faceDist < faceThreshold && minDist < distanceThreshold) // 1. Near face space and near a face class
                                     showToast("Face detected: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
                                 else if (faceDist < faceThreshold) // 2. Near face space but not near a known face class
-                                    showToast("Unknown face. Closest distance: " + minDistString, Toast.LENGTH_LONG);
+                                    showToast("Unknown face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
                                 else if (minDist < distanceThreshold) // 3. Distant from face space and near a face class
-                                    showToast("False recognition. Face distance: " + faceDistString, Toast.LENGTH_LONG);
+                                    showToast("False recognition. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
                                 else // 4. Distant from face space and not near a known face class.
                                     showToast("Image is not a face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
                             }
