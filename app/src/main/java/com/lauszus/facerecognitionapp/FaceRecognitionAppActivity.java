@@ -510,7 +510,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), TAG); // Save pictures in Pictures directory
         path.mkdir(); // Create directory if needed
-        String fileName = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".png";
+        String fileName = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(new Date()) + ".png";
         File file = new File(path, fileName);
 
         boolean bool = Imgcodecs.imwrite(file.toString(), mIntermediateMat);
