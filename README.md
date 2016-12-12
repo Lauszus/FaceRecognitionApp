@@ -9,6 +9,10 @@ This project demonstrats how to calculate Eigenfaces and Fisherfaces used for fa
 
 The library uses my other project [FaceRecognitionLib](https://github.com/Lauszus/FaceRecognitionLib) in order to calculate the Eigenfaces and Fisherfaces.
 
+## Screenshots
+
+<img src="face_detected.png" width=300/><img src="navigation_menu.png" width=300/>
+
 ## Build instructions
 
 In order to built this project you need to download and install [Android Studio](http://developer.android.com/sdk/index.html). You will then need to install the [Android NDK](https://developer.android.com/studio/projects/add-native-code.html#download-ndk).
