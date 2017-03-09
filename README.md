@@ -20,6 +20,18 @@ The library uses my other project [FaceRecognitionLib](https://github.com/Lauszu
 
 In order to built this project you need to download and install [Android Studio](http://developer.android.com/sdk/index.html). You will then need to install the [Android NDK](https://developer.android.com/studio/projects/add-native-code.html#download-ndk).
 
+Then clone the repository including the submodule:
+
+```bash
+git clone --recursive https://github.com/Lauszus/FaceRecognitionApp.git
+```
+
+If you have already cloned the project, then please run the following command in order to initialise the submodule:
+
+```bash
+git submodule update --init --recursive
+```
+
 The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` in [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android.html) and [Eigen3](https://eigen.tuxfamily.org) libraries.
 
 Both can be installed manually like so:
@@ -39,6 +51,7 @@ Linux:
 nano ~/.bash_profile
 export OPENCV_ANDROID_SDK=/path/to/OpenCV-android-sdk
 export EIGEN3_DIR=/path/to/eigen3
+echo $OPENCV_ANDROID_SDK $EIGEN3_DIR
 ```
 
 Mac:
@@ -47,6 +60,15 @@ Mac:
 nano /etc/launchd.conf
 setenv OPENCV_ANDROID_SDK /path/to/OpenCV-android-sdk
 setenv EIGEN3_DIR /path/to/eigen3
+echo $OPENCV_ANDROID_SDK $EIGEN3_DIR
+```
+
+Windows:
+
+```bash
+setx OPENCV_ANDROID_SDK /path/to/OpenCV-android-sdk
+setx EIGEN3_DIR /path/to/eigen3
+echo %OPENCV_ANDROID_SDK% %EIGEN3_DIR%
 ```
 
 For more information send me an email at <lauszus@gmail.com>.
