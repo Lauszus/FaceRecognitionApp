@@ -94,6 +94,15 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
+    public void flipCamera() {
+        disableView();
+        if (this.mCameraIndex == CAMERA_ID_FRONT)
+            setCameraIndex(CAMERA_ID_BACK);
+        else
+            setCameraIndex(CAMERA_ID_FRONT);
+        enableView();
+    }
+
     /**
      * Sets the camera index
      * @param cameraIndex new camera index

@@ -9,8 +9,9 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName '1.0'
+        vectorDrawables.useSupportLibrary = true
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
             stl 'gnustl_static'
             cFlags '-std=gnu++11 -fexceptions -frtti'
         }
