@@ -321,6 +321,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+                if (mGray.total() == 0)
+                    return;
                 Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
                 Imgproc.resize(mGray, mGray, imageSize);
                 Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
