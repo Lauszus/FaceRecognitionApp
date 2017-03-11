@@ -19,6 +19,9 @@
 package com.lauszus.facerecognitionapp;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -39,6 +42,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,6 +89,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private float faceThreshold, distanceThreshold;
     private SharedPreferences prefs;
     private TinyDB tinydb;
+    private Toolbar mToolbar;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -247,11 +253,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_face_recognition_app);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar); // Sets the Toolbar to act as the ActionBar for this Activity window
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar); // Sets the Toolbar to act as the ActionBar for this Activity window
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -309,6 +315,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 Log.i(TAG, "Cleared training set");
                 images.clear(); // Clear both arrays, when new instance is created
                 imagesLabels.clear();
+                showToast("Training set cleared", Toast.LENGTH_SHORT);
             }
         });
 
@@ -316,6 +323,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+                if (mGray.total() == 0)
+                    return;
                 Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
                 Imgproc.resize(mGray, mGray, imageSize);
                 Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
@@ -358,6 +367,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_java_surface_view);
+        mOpenCvCameraView.setCameraIndex(prefs.getInt("mCameraIndex", CameraBridgeViewBase.CAMERA_ID_FRONT));
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
     }
@@ -403,6 +413,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         editor.putFloat("faceThreshold", faceThreshold);
         editor.putFloat("distanceThreshold", distanceThreshold);
         editor.putBoolean("useEigenfaces", useEigenfaces);
+        editor.putInt("mCameraIndex", mOpenCvCameraView.mCameraIndex);
         editor.apply();
 
         // Store ArrayLists containing the images and labels
@@ -487,11 +498,15 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             switch (orientation) {
                 case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
                 case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
-                    Core.flip(mRgba, mRgba, 0); // Flip along x-axis
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        Core.flip(mRgba, mRgba, 0); // Flip along x-axis
+                    else
+                        Core.flip(mRgba, mRgba, -1); // Flip along both axis
                     break;
                 case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
                 case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
-                    Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        Core.flip(mRgba, mRgba, 1); // Flip along y-axis
                     break;
             }
         }
@@ -528,5 +543,61 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             drawer.closeDrawer(GravityCompat.START);
         else
             super.onBackPressed();
+    }
+
+    @SuppressLint("ApplySharedPref")
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_face_recognition_app, menu);
+        final MenuItem menuItem = menu.findItem(R.id.flip_camera);
+        View v = mToolbar.findViewById(R.id.flip_camera);
+        if (v != null) { // This will be null, when the menu is first created
+            // flipCamera() has already been called, so the index has already been changed
+            // We only set this here, so it does not use the default icon when inflating the menu
+            if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+            else
+                menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+            ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
+            animator.setDuration(500);
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                }
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    // When the icon has been rotated, then change the icon
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+                    else
+                        menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+                }
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                }
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+                }
+            });
+            animator.start();
+        } else {
+            // Show rear camera icon if front camera is currently used and front camera icon if back camera is used
+            if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+            else
+                menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.flip_camera:
+                mOpenCvCameraView.flipCamera();
+                supportInvalidateOptionsMenu();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
