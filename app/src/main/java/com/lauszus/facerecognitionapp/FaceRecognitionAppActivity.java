@@ -19,7 +19,9 @@
 package com.lauszus.facerecognitionapp;
 
 import android.Manifest;
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -543,25 +545,48 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             super.onBackPressed();
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem menuItem = menu.findItem(R.id.flip_camera);
-        if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-            menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
-        else
-            menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
-        View v = mToolbar.findViewById(R.id.flip_camera);
-        if (v != null) { // This will be null, when the menu is first created
-            ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f)
-                    .setDuration(500)
-                    .start();
-        }
-        return true;
-    }
-
+    @SuppressLint("ApplySharedPref")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_face_recognition_app, menu);
+        final MenuItem menuItem = menu.findItem(R.id.flip_camera);
+        View v = mToolbar.findViewById(R.id.flip_camera);
+        if (v != null) { // This will be null, when the menu is first created
+            // flipCamera() has already been called, so the index has already been changed
+            // We only set this here, so it does not use the default icon when inflating the menu
+            if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+            else
+                menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+            ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
+            animator.setDuration(500);
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                }
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    // When the icon has been rotated, then change the icon
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+                    else
+                        menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+                }
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                }
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+                }
+            });
+            animator.start();
+        } else {
+            // Show rear camera icon if front camera is currently used and front camera icon if back camera is used
+            if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
+            else
+                menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+        }
         return true;
     }
 
@@ -570,7 +595,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         switch (item.getItemId()) {
             case R.id.flip_camera:
                 mOpenCvCameraView.flipCamera();
-                supportInvalidateOptionsMenu(); // This will call onPrepareOptionsMenu
+                supportInvalidateOptionsMenu();
                 return true;
         }
         return super.onOptionsItemSelected(item);

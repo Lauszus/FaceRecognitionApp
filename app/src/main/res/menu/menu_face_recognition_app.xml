@@ -6,7 +6,7 @@
 
     <item
         android:id="@+id/flip_camera"
-        android:title="@string/rotate"
+        android:title="@string/flip"
         android:icon="@drawable/ic_camera_rear_white_24dp"
         app:showAsAction="always" />
 
