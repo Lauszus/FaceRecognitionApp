@@ -76,7 +76,7 @@ public class JavaCameraView extends CameraBridgeViewBase implements PreviewCallb
         synchronized (this) {
             mCamera = null;
 
-            if (mCameraIndex == CAMERA_ID_ANY) {
+            if (mCameraIndex == CAMERA_ID_ANY || isEmulator()) { // Just open any camera on emulators
                 Log.d(TAG, "Trying to open camera with old open()");
                 try {
                     mCamera = Camera.open();

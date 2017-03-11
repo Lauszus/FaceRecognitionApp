@@ -550,8 +550,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
         View v = mToolbar.findViewById(R.id.flip_camera);
         if (v != null) { // This will be null, when the menu is first created
-            ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
-            animator.start();
+            ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f)
+                    .setDuration(500)
+                    .start();
         }
         return true;
     }

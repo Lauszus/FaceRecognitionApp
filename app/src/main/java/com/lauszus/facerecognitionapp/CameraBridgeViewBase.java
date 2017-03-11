@@ -414,7 +414,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
      * @return True if the app is running on an emulator.
      */
     public boolean isEmulator() {
-        return Build.BRAND.equalsIgnoreCase("generic") || Build.BRAND.equalsIgnoreCase("android");
+        return Build.BRAND.equalsIgnoreCase("generic") || Build.BRAND.equalsIgnoreCase("generic_x86") || Build.BRAND.equalsIgnoreCase("android");
     }
 
     /**
