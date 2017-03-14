@@ -557,7 +557,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     }
 
     @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.flip_camera:
                 mOpenCvCameraView.flipCamera();
@@ -574,11 +574,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        // When the icon has been rotated, then change the icon
-                        if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                            item.setIcon(R.drawable.ic_camera_rear_white_24dp);
-                        else
-                            item.setIcon(R.drawable.ic_camera_front_white_24dp);
+                        supportInvalidateOptionsMenu();
                     }
 
                     @Override
