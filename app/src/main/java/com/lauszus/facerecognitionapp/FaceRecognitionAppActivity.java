@@ -486,29 +486,55 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     }
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        mGray = inputFrame.gray();
-        mRgba = inputFrame.rgba();
+        Mat mGrayTmp = inputFrame.gray();
+        Mat mRgbaTmp = inputFrame.rgba();
 
         // Flip image to get mirror effect
         int orientation = mOpenCvCameraView.getScreenOrientation();
         if (mOpenCvCameraView.isEmulator()) // Treat emulators as a special case
-            Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+            Core.flip(mRgbaTmp, mRgbaTmp, 1); // Flip along y-axis
         else {
-            switch (orientation) {
+            switch (orientation) { // RGB image
                 case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
                 case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
                     if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mRgba, mRgba, 0); // Flip along x-axis
+                        Core.flip(mRgbaTmp, mRgbaTmp, 0); // Flip along x-axis
                     else
-                        Core.flip(mRgba, mRgba, -1); // Flip along both axis
+                        Core.flip(mRgbaTmp, mRgbaTmp, -1); // Flip along both axis
                     break;
                 case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
                 case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
                     if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mRgba, mRgba, 1); // Flip along y-axis
+                        Core.flip(mRgbaTmp, mRgbaTmp, 1); // Flip along y-axis
+                    break;
+            }
+            switch (orientation) { // Grayscale image
+                case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+                    Core.transpose(mGrayTmp, mGrayTmp); // Rotate image
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        Core.flip(mGrayTmp, mGrayTmp, -1); // Flip along both axis
+                    else
+                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
+                    break;
+                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+                    Core.transpose(mGrayTmp, mGrayTmp); // Rotate image
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK)
+                        Core.flip(mGrayTmp, mGrayTmp, 0); // Flip along x-axis
+                    break;
+                case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
+                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
+                    break;
+                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+                    Core.flip(mGrayTmp, mGrayTmp, 0); // Flip along x-axis
+                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK)
+                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
                     break;
             }
         }
+
+        mGray = mGrayTmp;
+        mRgba = mRgbaTmp;
 
         return mRgba;
     }
@@ -574,7 +600,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        supportInvalidateOptionsMenu();
+                        supportInvalidateOptionsMenu(); // This will call onCreateOptionsMenu()
                     }
 
                     @Override
