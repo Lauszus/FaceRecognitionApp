@@ -20,17 +20,21 @@ package com.lauszus.facerecognitionapp;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.opencv.core.Mat;
 
 // All computations is done in an asynchronous task, so we do not skip any frames
 class NativeMethods {
+    private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName() + "/" + NativeMethods.class.getSimpleName();
+
     static void loadNativeLibraries() {
         System.loadLibrary("face-lib");
     }
 
-    static class TrainFacesTask extends AsyncTask<Void, Void, Void> {
+    static class TrainFacesTask extends AsyncTask<Void, Void, Boolean> {
         private final Mat images, classes;
+        private Exception error;
 
         /**
          * Constructor used for Eigenfaces.
@@ -51,12 +55,23 @@ class NativeMethods {
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
-            if (classes == null)
-                TrainFaces(images.getNativeObjAddr(), 0); // Train Eigenfaces
-            else
-                TrainFaces(images.getNativeObjAddr(), classes.getNativeObjAddr()); // Train Fisherfaces
-            return null;
+        protected Boolean doInBackground(Void... params) {
+            try {
+                if (classes == null)
+                    TrainFaces(images.getNativeObjAddr(), 0); // Train Eigenfaces
+                else
+                    TrainFaces(images.getNativeObjAddr(), classes.getNativeObjAddr()); // Train Fisherfaces
+                return true;
+            } catch (Exception e) {
+                error = e;
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (!result)
+                Log.e(TAG, error.getMessage());
         }
     }
 
@@ -67,6 +82,7 @@ class NativeMethods {
 
         private final Callback callback;
         private final boolean useEigenfaces;
+        private Exception error;
 
         interface Callback {
             void onMeasureDistComplete(Bundle bundle);
@@ -82,7 +98,12 @@ class NativeMethods {
             float[] minDist = new float[] { -1 };
             int[] minDistIndex = new int[1];
             float[] faceDist = new float[1];
-            MeasureDist(mat[0].getNativeObjAddr(), minDist, minDistIndex, faceDist, useEigenfaces);
+            try {
+                MeasureDist(mat[0].getNativeObjAddr(), minDist, minDistIndex, faceDist, useEigenfaces);
+            } catch (Exception e) {
+                error = e;
+                return null;
+            }
             Bundle bundle = new Bundle();
             bundle.putFloat(MIN_DIST_FLOAT, minDist[0]);
             bundle.putInt(MIN_DIST_INDEX_INT, minDistIndex[0]);
@@ -92,7 +113,10 @@ class NativeMethods {
 
         @Override
         protected void onPostExecute(Bundle bundle) {
-            callback.onMeasureDistComplete(bundle);
+            if (bundle != null)
+                callback.onMeasureDistComplete(bundle);
+            else
+                Log.e(TAG, error.getMessage());
         }
     }
 
@@ -109,9 +133,11 @@ class NativeMethods {
     /**
      * Measure euclidean distance between the weight of the image compared to all weights.
      * @param addrImage     Vector containing the image.
+     * @param minDist       Returns a list of sorted distances to images
+     * @param minDistIndex  Returns the index of the closest distance
+     * @param faceDist      Retuns the distance to facespace
      * @param useEigenfaces Set to true if Eigenfaces are used. If set to false,
      *                      then Fisherfaces will be used.
-     * @return              Returns an array of floats of all distances.
      */
     private static native void MeasureDist(long addrImage, float[] minDist, int[] minDistIndex, float[] faceDist, boolean useEigenfaces);
 }
