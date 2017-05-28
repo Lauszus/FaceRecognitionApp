@@ -34,14 +34,19 @@ class NativeMethods {
 
     static class TrainFacesTask extends AsyncTask<Void, Void, Boolean> {
         private final Mat images, classes;
+        private final Callback callback;
         private Exception error;
+
+        interface Callback {
+            void onTrainFacesComplete(boolean result);
+        }
 
         /**
          * Constructor used for Eigenfaces.
          * @param images Matrix containing all images as column vectors.
          */
-        TrainFacesTask(Mat images) {
-            this(images, null);
+        TrainFacesTask(Mat images, Callback callback) {
+            this(images, null, callback);
         }
 
         /**
@@ -49,9 +54,10 @@ class NativeMethods {
          * @param images  Matrix containing all images as column vectors.
          * @param classes Vector containing classes for each image.
          */
-        TrainFacesTask(Mat images, Mat classes) {
+        TrainFacesTask(Mat images, Mat classes, Callback callback) {
             this.images = images;
             this.classes = classes;
+            this.callback = callback;
         }
 
         @Override
@@ -70,7 +76,10 @@ class NativeMethods {
 
         @Override
         protected void onPostExecute(Boolean result) {
-            if (!result)
+            callback.onTrainFacesComplete(result);
+            if (result)
+                Log.i(TAG, "Done training images");
+            else
                 Log.e(TAG, error.getMessage());
         }
     }
@@ -113,8 +122,9 @@ class NativeMethods {
 
         @Override
         protected void onPostExecute(Bundle bundle) {
+            callback.onMeasureDistComplete(bundle);
             if (bundle != null)
-                callback.onMeasureDistComplete(bundle);
+                Log.i(TAG, "Done measuring distance");
             else
                 Log.e(TAG, error.getMessage());
         }

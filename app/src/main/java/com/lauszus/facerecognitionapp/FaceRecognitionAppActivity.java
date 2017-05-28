@@ -26,6 +26,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -78,8 +79,9 @@ import java.util.Set;
 public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
-    ArrayList<Mat> images;
-    ArrayList<String> imagesLabels;
+    private ArrayList<Mat> images;
+    private ArrayList<String> imagesLabels;
+    private String[] uniqueLabels;
     private CameraBridgeViewBase mOpenCvCameraView;
     private Mat mRgba, mGray;
     private Toast mToast;
@@ -89,6 +91,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private SharedPreferences prefs;
     private TinyDB tinydb;
     private Toolbar mToolbar;
+    private NativeMethods.TrainFacesTask mTrainFacesTask;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -107,9 +110,18 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         trainFaces(); // When we have finished setting the label, then retrain faces
     }
 
-    private void trainFaces() {
+    /**
+     * Train faces using stored images.
+     * @return  Returns false if the task is already running.
+     */
+    private boolean trainFaces() {
         if (images.isEmpty())
-            return; // The array might be empty if the method is changed in the OnClickListener
+            return true; // The array might be empty if the method is changed in the OnClickListener
+
+        if (mTrainFacesTask != null && mTrainFacesTask.getStatus() != AsyncTask.Status.FINISHED) {
+            Log.i(TAG, "mTrainFacesTask is still running");
+            return false;
+        }
 
         Mat imagesMatrix = new Mat((int) images.get(0).total(), images.size(), images.get(0).type());
         for (int i = 0; i < images.size(); i++)
@@ -118,11 +130,17 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         Log.i(TAG, "Images height: " + imagesMatrix.height() + " Width: " + imagesMatrix.width() + " total: " + imagesMatrix.total());
 
         // Train the face recognition algorithms in an asynchronous task, so we do not skip any frames
-        if (useEigenfaces)
-            new NativeMethods.TrainFacesTask(imagesMatrix).execute();
-        else {
+        if (useEigenfaces) {
+            Log.i(TAG, "Training Eigenfaces");
+            showToast("Training " + getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT);
+
+            mTrainFacesTask = new NativeMethods.TrainFacesTask(imagesMatrix, trainFacesTaskCallback);
+        } else {
+            Log.i(TAG, "Training Fisherfaces");
+            showToast("Training " + getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT);
+
             Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
-            String[] uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
+            uniqueLabels = uniqueLabelsSet.toArray(new String[uniqueLabelsSet.size()]); // Convert to String array, so we can read the values from the indices
 
             int[] classesNumbers = new int[uniqueLabels.length];
             for (int i = 0; i < classesNumbers.length; i++)
@@ -145,9 +163,22 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             Mat vectorClasses = new Mat(classes.length, 1, CvType.CV_32S); // CV_32S == int
             vectorClasses.put(0, 0, classes); // Copy int array into a vector
 
-            new NativeMethods.TrainFacesTask(imagesMatrix, vectorClasses).execute();
+            mTrainFacesTask = new NativeMethods.TrainFacesTask(imagesMatrix, vectorClasses, trainFacesTaskCallback);
         }
+        mTrainFacesTask.execute();
+
+        return true;
     }
+
+    private NativeMethods.TrainFacesTask.Callback trainFacesTaskCallback = new NativeMethods.TrainFacesTask.Callback() {
+        @Override
+        public void onTrainFacesComplete(boolean result) {
+            if (result)
+                showToast("Training complete", Toast.LENGTH_SHORT);
+            else
+                showToast("Training failed", Toast.LENGTH_LONG);
+        }
+    };
 
     private void showLabelsDialog() {
         Set<String> uniqueLabelsSet = new HashSet<>(imagesLabels); // Get all unique labels
@@ -260,23 +291,31 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        RadioButton mRadioButtonEigenfaces = (RadioButton) findViewById(R.id.eigenfaces);
+        final RadioButton mRadioButtonEigenfaces = (RadioButton) findViewById(R.id.eigenfaces);
+        final RadioButton mRadioButtonFisherfaces = (RadioButton) findViewById(R.id.fisherfaces);
+
         mRadioButtonEigenfaces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showToast(getResources().getString(R.string.eigenfaces), Toast.LENGTH_SHORT);
                 useEigenfaces = true;
-                trainFaces();
+                if (!trainFaces()) {
+                    useEigenfaces = false; // Set variable back
+                    showToast("Still training...", Toast.LENGTH_SHORT);
+                    mRadioButtonEigenfaces.setChecked(useEigenfaces);
+                    mRadioButtonFisherfaces.setChecked(!useEigenfaces);
+                }
             }
         });
-
-        RadioButton mRadioButtonFisherfaces = (RadioButton) findViewById(R.id.fisherfaces);
         mRadioButtonFisherfaces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showToast(getResources().getString(R.string.fisherfaces), Toast.LENGTH_SHORT);
                 useEigenfaces = false;
-                trainFaces();
+                if (!trainFaces()) {
+                    useEigenfaces = true; // Set variable back
+                    showToast("Still training...", Toast.LENGTH_SHORT);
+                    mRadioButtonEigenfaces.setChecked(useEigenfaces);
+                    mRadioButtonFisherfaces.setChecked(!useEigenfaces);
+                }
             }
         });
 
@@ -319,8 +358,21 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
 
         findViewById(R.id.take_picture_button).setOnClickListener(new View.OnClickListener() {
+            NativeMethods.MeasureDistTask mMeasureDistTask;
+
             @Override
             public void onClick(View v) {
+                if (mMeasureDistTask != null && mMeasureDistTask.getStatus() != AsyncTask.Status.FINISHED) {
+                    Log.i(TAG, "mMeasureDistTask is still running");
+                    showToast("Still processing old image...", Toast.LENGTH_SHORT);
+                    return;
+                }
+                if (mTrainFacesTask != null && mTrainFacesTask.getStatus() != AsyncTask.Status.FINISHED) {
+                    Log.i(TAG, "mTrainFacesTask is still running");
+                    showToast("Still training...", Toast.LENGTH_SHORT);
+                    return;
+                }
+
                 Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
                 if (mGray.total() == 0)
                     return;
@@ -334,32 +386,8 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 images.add(image); // Add current image to the array
 
                 // Calculate normalized Euclidean distance
-                new NativeMethods.MeasureDistTask(useEigenfaces, new NativeMethods.MeasureDistTask.Callback() {
-                    @Override
-                    public void onMeasureDistComplete(Bundle bundle) {
-                        float minDist = bundle.getFloat(NativeMethods.MeasureDistTask.MIN_DIST_FLOAT);
-                        if (minDist != -1) {
-                            int minIndex = bundle.getInt(NativeMethods.MeasureDistTask.MIN_DIST_INDEX_INT);
-                            float faceDist = bundle.getFloat(NativeMethods.MeasureDistTask.DIST_FACE_FLOAT);
-                            if (imagesLabels.size() > minIndex) { // Just to be sure
-                                Log.i(TAG, "dist[" + minIndex + "]: " + minDist + ", face dist: " + faceDist + ", label: " + imagesLabels.get(minIndex));
-
-                                String minDistString = String.format(Locale.US, "%.4f", minDist);
-                                String faceDistString = String.format(Locale.US, "%.4f", faceDist);
-
-                                if (faceDist < faceThreshold && minDist < distanceThreshold) // 1. Near face space and near a face class
-                                    showToast("Face detected: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
-                                else if (faceDist < faceThreshold) // 2. Near face space but not near a known face class
-                                    showToast("Unknown face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
-                                else if (minDist < distanceThreshold) // 3. Distant from face space and near a face class
-                                    showToast("False recognition. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
-                                else // 4. Distant from face space and not near a known face class.
-                                    showToast("Image is not a face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
-                            }
-                        } else
-                            Log.w(TAG, "Array is null");
-                    }
-                }).execute(image);
+                mMeasureDistTask = new NativeMethods.MeasureDistTask(useEigenfaces, measureDistTaskCallback);
+                mMeasureDistTask.execute(image);
 
                 showLabelsDialog();
             }
@@ -370,6 +398,43 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
     }
+
+    private NativeMethods.MeasureDistTask.Callback measureDistTaskCallback = new NativeMethods.MeasureDistTask.Callback() {
+        @Override
+        public void onMeasureDistComplete(Bundle bundle) {
+            if (bundle == null) {
+                showToast("Failed to measure distance", Toast.LENGTH_LONG);
+                return;
+            }
+
+            float minDist = bundle.getFloat(NativeMethods.MeasureDistTask.MIN_DIST_FLOAT);
+            if (minDist != -1) {
+                int minIndex = bundle.getInt(NativeMethods.MeasureDistTask.MIN_DIST_INDEX_INT);
+                float faceDist = bundle.getFloat(NativeMethods.MeasureDistTask.DIST_FACE_FLOAT);
+                if (imagesLabels.size() > minIndex) { // Just to be sure
+                    Log.i(TAG, "dist[" + minIndex + "]: " + minDist + ", face dist: " + faceDist + ", label: " + imagesLabels.get(minIndex));
+
+                    String minDistString = String.format(Locale.US, "%.4f", minDist);
+                    String faceDistString = String.format(Locale.US, "%.4f", faceDist);
+
+                    if (faceDist < faceThreshold && minDist < distanceThreshold) // 1. Near face space and near a face class
+                        showToast("Face detected: " + imagesLabels.get(minIndex) + ". Distance: " + minDistString, Toast.LENGTH_LONG);
+                    else if (faceDist < faceThreshold) // 2. Near face space but not near a known face class
+                        showToast("Unknown face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
+                    else if (minDist < distanceThreshold) // 3. Distant from face space and near a face class
+                        showToast("False recognition. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
+                    else // 4. Distant from face space and not near a known face class.
+                        showToast("Image is not a face. Face distance: " + faceDistString + ". Closest Distance: " + minDistString, Toast.LENGTH_LONG);
+                }
+            } else {
+                Log.w(TAG, "Array is null");
+                if (useEigenfaces || uniqueLabels.length > 1)
+                    showToast("Keep training...", Toast.LENGTH_SHORT);
+                else
+                    showToast("Fisherfaces needs two different faces", Toast.LENGTH_SHORT);
+            }
+        }
+    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -447,9 +512,12 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     imagesLabels = tinydb.getListString("imagesLabels");
 
                     Log.i(TAG, "Number of images: " + images.size()  + ". Number of labels: " + imagesLabels.size());
-                    if (!images.isEmpty())
+                    if (!images.isEmpty()) {
+                        trainFaces(); // Train images after they are loaded
                         Log.i(TAG, "Images height: " + images.get(0).height() + " Width: " + images.get(0).width() + " total: " + images.get(0).total());
+                    }
                     Log.i(TAG, "Labels: " + imagesLabels);
+
                     break;
                 default:
                     super.onManagerConnected(status);
