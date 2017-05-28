@@ -99,8 +99,9 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_Measure
         VectorXi image;
         cv2eigen(*pImage, image); // Convert from OpenCV Mat to Eigen matrix
 
-        LOGI("Reconstructing Faces");
+        LOGI("Project faces");
         VectorXf W = pFacebase->project(image); // Project onto subspace
+        LOGI("Reconstructing faces");
         VectorXf face = pFacebase->reconstructFace(W);
 
         LOGI("Calculate normalized Euclidean distance");
@@ -116,10 +117,10 @@ JNIEXPORT void JNICALL Java_com_lauszus_facerecognitionapp_NativeMethods_Measure
 
         int minIndex = (int) sortedIdx[0];
         env->SetFloatArrayRegion(minDist, 0, 1, &dist(minIndex));
-        env->SetIntArrayRegion(minDistIndex, 0, 1, &(minIndex));
+        env->SetIntArrayRegion(minDistIndex, 0, 1, &minIndex);
     }
 }
-
+/*
 static inline void convertYUVToRGBA(uint8_t y, uint8_t u, uint8_t v, uint8_t *buf) __attribute__((always_inline));
 
 static void convertYUVImageToRGBA(const Mat *pYUV, Mat *pRGB) {
@@ -213,7 +214,7 @@ static inline void convertYUVToRGBA(uint8_t y, uint8_t u, uint8_t v, uint8_t *bu
     buf[2] = (uint8_t) clamp(bTmp, 0, 255);
     buf[3] = 255; // Alpha channel
 }
-
+*/
 #ifdef __cplusplus
 }
 #endif
