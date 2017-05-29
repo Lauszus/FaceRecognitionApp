@@ -38,6 +38,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
     private TextView mSeekBarValue;
     private float multiplier;
     private int nValues;
+    private int min;
 
     public SeekBarArrows(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -47,6 +48,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         TypedArray styledAttrs = getContext().obtainStyledAttributes(attrs, R.styleable.SeekBarArrows); // Read all attributes from xml
 
         String mSeekBarText = styledAttrs.getString(R.styleable.SeekBarArrows_text);
+        min = styledAttrs.getInt(R.styleable.SeekBarArrows_min, 0);
         float max = styledAttrs.getFloat(R.styleable.SeekBarArrows_max, 0);
         nValues = styledAttrs.getInt(R.styleable.SeekBarArrows_n_values, 0);
 
@@ -65,7 +67,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         styledAttrs.recycle();
     }
 
-    public interface OnSeekBarArrowsChangeListener {
+    interface OnSeekBarArrowsChangeListener {
         void onProgressChanged(float progress);
     }
 
@@ -76,11 +78,20 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
     }
 
     public float getProgress() {
-        return mSeekBar.getProgress() * multiplier;
+        return mSeekBar.getProgress() * multiplier + min;
     }
 
     public void setProgress(float value) {
-        mSeekBar.setProgress((int) (value / multiplier));
+        mSeekBar.setProgress((int) (value / multiplier) - min);
+    }
+
+    public int getMin() {
+        return min;
+    }
+
+    public void setMin(int min) {
+        this.min = min;
+        setMax(getMax());
     }
 
     public float getMax() {
@@ -89,7 +100,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
 
     public void setMax(float max) {
         multiplier = max / (float)nValues;
-        mSeekBar.setMax(nValues);
+        mSeekBar.setMax(nValues - min);
         Log.i(TAG, "Max: " + max + " Raw: " + mSeekBar.getMax() + " Multiplier: " + multiplier);
     }
 
@@ -109,9 +120,9 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        mSeekBarValue.setText(progressToString(progress));
+        mSeekBarValue.setText(progressToString(progress + min));
         if (mOnSeekBarArrowsChangeListener != null)
-            mOnSeekBarArrowsChangeListener.onProgressChanged((float)progress * multiplier);
+            mOnSeekBarArrowsChangeListener.onProgressChanged((float)progress * multiplier + min);
     }
 
     @Override
@@ -143,7 +154,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         }
 
         private void longClick() {
-            mSeekbar.setProgress(round10(mSeekbar.getProgress() + (positive ? 10 : -10))); // Increase/decrease with 10 and round to nearest multiple of 10
+            mSeekbar.setProgress(round10(mSeekbar.getProgress() + (positive ? 10 : -10)) - min); // Increase/decrease with 10 and round to nearest multiple of 10
         }
 
         private Runnable runnable = new Runnable() {

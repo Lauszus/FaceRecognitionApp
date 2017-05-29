@@ -86,8 +86,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private Mat mRgba, mGray;
     private Toast mToast;
     private boolean useEigenfaces;
-    private SeekBarArrows mThresholdFace, mThresholdDistance;
+    private SeekBarArrows mThresholdFace, mThresholdDistance, mMaximumImages;
     private float faceThreshold, distanceThreshold;
+    private int maximumImages;
     private SharedPreferences prefs;
     private TinyDB tinydb;
     private Toolbar mToolbar;
@@ -347,6 +348,23 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
         distanceThreshold = mThresholdDistance.getProgress(); // Get initial value
 
+        mMaximumImages = (SeekBarArrows) findViewById(R.id.maximum_images);
+        mMaximumImages.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
+            @Override
+            public void onProgressChanged(float progress) {
+                Log.i(TAG, "Maximum number of images: " + mMaximumImages.progressToString(progress));
+                maximumImages = (int)progress;
+                if (images != null && images.size() > maximumImages) {
+                    int nrRemoveImages = images.size() - maximumImages;
+                    Log.i(TAG, "Removed " + nrRemoveImages + " images from the list");
+                    images.subList(0, nrRemoveImages).clear(); // Remove oldest images
+                    imagesLabels.subList(0, nrRemoveImages).clear(); // Remove oldest labels
+                    trainFaces(); // Retrain faces
+                }
+            }
+        });
+        maximumImages = (int)mMaximumImages.getProgress(); // Get initial value
+
         findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -384,6 +402,12 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 Mat image = mGray.reshape(0, (int) mGray.total()); // Create column vector
                 Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
                 images.add(image); // Add current image to the array
+
+                if (images.size() > maximumImages) {
+                    images.remove(0); // Remove first image
+                    imagesLabels.remove(0); // Remove first label
+                    Log.i(TAG, "The number of images is limited to: " + images.size());
+                }
 
                 // Calculate normalized Euclidean distance
                 mMeasureDistTask = new NativeMethods.MeasureDistTask(useEigenfaces, measureDistTaskCallback);
@@ -428,7 +452,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 }
             } else {
                 Log.w(TAG, "Array is null");
-                if (useEigenfaces || uniqueLabels.length > 1)
+                if (useEigenfaces || uniqueLabels == null || uniqueLabels.length > 1)
                     showToast("Keep training...", Toast.LENGTH_SHORT);
                 else
                     showToast("Fisherfaces needs two different faces", Toast.LENGTH_SHORT);
@@ -467,6 +491,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         progress = prefs.getFloat("distanceThreshold", -1);
         if (progress != -1)
             mThresholdDistance.setProgress(progress);
+        mMaximumImages.setProgress(prefs.getInt("maximumImages", 25)); // Use 25 images by default
     }
 
     @Override
@@ -476,6 +501,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         Editor editor = prefs.edit();
         editor.putFloat("faceThreshold", faceThreshold);
         editor.putFloat("distanceThreshold", distanceThreshold);
+        editor.putInt("maximumImages", maximumImages);
         editor.putBoolean("useEigenfaces", useEigenfaces);
         editor.putInt("mCameraIndex", mOpenCvCameraView.mCameraIndex);
         editor.apply();

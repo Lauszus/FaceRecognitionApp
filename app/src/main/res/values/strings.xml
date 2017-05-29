@@ -7,6 +7,7 @@
     <string name="fisherfaces">Fisherfaces</string>
     <string name="threshold_face">Face threshold:</string>
     <string name="threshold_distance">Distance threshold:</string>
+    <string name="maximum_images">Maximum number of images:</string>
     <string name="clear_button">Clear training set</string>
     <string name="flip">Flip</string>
 </resources>

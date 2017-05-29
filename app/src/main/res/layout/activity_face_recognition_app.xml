@@ -74,6 +74,15 @@
                     SeekBarArrows:max=".5"
                     SeekBarArrows:n_values="500" />
 
+                <com.lauszus.facerecognitionapp.SeekBarArrows
+                    android:id="@+id/maximum_images"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    SeekBarArrows:text="@string/maximum_images"
+                    SeekBarArrows:min="5"
+                    SeekBarArrows:max="50"
+                    SeekBarArrows:n_values="50" />
+
                 <Button
                     android:id="@+id/clear_button"
                     android:layout_width="match_parent"

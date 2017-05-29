@@ -3,6 +3,7 @@
 
     <declare-styleable name = "SeekBarArrows" >
         <attr name="text" format="string"/>
+        <attr name="min" format="integer"/>
         <attr name="max" format="float"/>
         <attr name="n_values" format="integer"/>
     </declare-styleable>
