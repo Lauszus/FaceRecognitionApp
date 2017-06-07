@@ -32,14 +32,14 @@ If you have already cloned the project, then please run the following command in
 git submodule update --init --recursive
 ```
 
-The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` in [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android.html) and [Eigen3](https://eigen.tuxfamily.org) libraries.
+The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` in [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android) and [Eigen3](https://eigen.tuxfamily.org) libraries.
 
 Both can be installed manually like so:
 
 ```bash
-wget https://github.com/opencv/opencv/releases/download/3.1.0/OpenCV-3.1.0-android-sdk.zip
-unzip OpenCV-3.1.0-android-sdk.zip
-wget https://bitbucket.org/eigen/eigen/get/3.3.0.zip -O Eigen3.zip
+wget https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-android-sdk.zip -O opencv-android-sdk.zip
+unzip opencv-android-sdk.zip
+wget https://bitbucket.org/eigen/eigen/get/3.3.3.zip -O Eigen3.zip
 unzip Eigen3.zip
 ```
 
