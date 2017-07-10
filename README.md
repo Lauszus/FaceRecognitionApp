@@ -14,7 +14,7 @@ The library uses my other project [FaceRecognitionLib](https://github.com/Lauszu
 
 ## Screenshots
 
-<img src="face_detected.png" width=300/><img src="navigation_menu.png" width=300/>
+<img src="face_detected_kristian.png" width=250/><img src="face_detected_jon.png" width=250/><img src="navigation_menu.png" width=250/>
 
 ## Build instructions
 
