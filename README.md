@@ -14,6 +14,8 @@ The library uses my other project [FaceRecognitionLib](https://github.com/Lauszu
 
 A short blog post can be found at the following link: <http://blog.tkjelectronics.dk/2017/07/face-recognition-using-eigenfaces-and-fisherfaces>.
 
+The reports I wrote together with Jonathan Wang can be found at the following links: [Eigenfaces\_Report.pdf](https://github.com/Lauszus/FaceRecognitionLib/raw/master/Eigenfaces_Report.pdf) and [Final\_Project\_Report.pdf](https://github.com/Lauszus/FaceRecognitionLib/raw/master/Final_Project_Report.pdf).
+
 ## Screenshots
 
 <img src="face_detected_kristian.png" width=250/><img src="face_detected_jon.png" width=250/><img src="navigation_menu.png" width=250/>
