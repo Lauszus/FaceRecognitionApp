@@ -75,4 +75,6 @@ setx EIGEN3_DIR /path/to/eigen3
 echo %OPENCV_ANDROID_SDK% %EIGEN3_DIR%
 ```
 
+__Please note that ```/path/to/``` should be replaced with the actual path to the Eigen and OpenCV Android SDK directories.__
+
 For more information send me an email at <lauszus@gmail.com>.
