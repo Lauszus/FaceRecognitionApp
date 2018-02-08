@@ -15,6 +15,23 @@ android {
             stl 'gnustl_static'
             cFlags '-std=gnu++11 -fexceptions -frtti'
         }
+        setProperty('archivesBaseName', rootProject.name + '-' + defaultConfig.versionName)
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            universalApk true
+            include defaultConfig.ndk.abiFilters as String[]
+        }
+    }
+    applicationVariants.all { variant ->
+        if (variant.getBuildType().isMinifyEnabled()) {
+            variant.assemble.doLast {
+                variant.mappingFile.renameTo(variant.mappingFile.parent +
+                        "/$archivesBaseName-$variant.baseName-mapping.txt")
+            }
+        }
     }
     signingConfigs {
         release
