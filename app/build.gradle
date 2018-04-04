@@ -7,8 +7,8 @@ android {
         applicationId 'com.lauszus.facerecognitionapp'
         minSdkVersion 15
         targetSdkVersion 24
-        versionCode 3
-        versionName '1.2'
+        versionCode 4
+        versionName '1.2.1-dev'
         vectorDrawables.useSupportLibrary = true
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
