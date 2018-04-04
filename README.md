@@ -24,13 +24,19 @@ The reports I wrote together with Jonathan Wang can be found at the following li
 
 In order to built this project you need to download and install [Android Studio](http://developer.android.com/sdk/index.html). You will then need to install the [Android NDK](https://developer.android.com/studio/projects/add-native-code.html#download-ndk).
 
-Then clone the repository including the submodule:
+Then simply download the latest release: <https://github.com/Lauszus/FaceRecognitionApp/releases/download/1.2.1-dev/FaceRecognitionApp-1.2.1-dev.zip> and open the project in Android Studio.
+
+## Advanced build instructions
+
+The following instructions are meant for advanced users who wants to clone and modify the source files.
+
+First clone the repository including the submodule:
 
 ```bash
 git clone --recursive https://github.com/Lauszus/FaceRecognitionApp.git
 ```
 
-If you have already cloned the project, then please run the following command in order to initialise the submodule:
+If you have already cloned the project, then please run the following command in order to initialize the submodule:
 
 ```bash
 git submodule update --init --recursive
