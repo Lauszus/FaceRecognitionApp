@@ -40,4 +40,45 @@ before_script:
   - export EIGEN3_DIR=$(dirname $(find $(pwd) -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
 
 script:
-  ./gradlew build
+  - ./gradlew build
+
+before_deploy:
+  # Clean the project
+  - ./gradlew clean
+  - rm -rf build
+
+  # Remove git files
+  - find . -name .git | xargs rm -rf
+  - find . -name .gitmodules | xargs rm -rf
+  - find . -name .gitignore | xargs rm -rf
+  - find . -name .gitattributes | xargs rm -rf
+
+  # Remove zip files
+  - rm -f android-ndk-r14b-linux-x86_64.zip
+  - rm -f opencv-3.2.0-android-sdk.zip
+  - rm -f Eigen3.zip
+
+  # Remove unused directories
+  - rm -rf android-ndk-r14b
+  - rm -rf OpenCV-android-sdk/apk
+  - rm -rf OpenCV-android-sdk/samples
+
+  # Hardcode paths to OpenCV and Eigen3
+  - EIGEN3_DIR_NAME=$(basename $EIGEN3_DIR)
+  - sed -i app/src/main/cpp/Android.mk -e "s/\$(OPENCV_ANDROID_SDK)/\$(LOCAL_PATH)\/..\/..\/..\/..\/OpenCV-android-sdk/"
+  - sed -i app/src/main/cpp/Android.mk -e "s/\$(EIGEN3_DIR)/\$(LOCAL_PATH)\/..\/..\/..\/..\/$EIGEN3_DIR_NAME/"
+
+  # Zip the directory
+  - cd ../
+  - mv FaceRecognitionApp "FaceRecognitionApp-$TRAVIS_TAG"
+  - zip -rq "FaceRecognitionApp-$TRAVIS_TAG.zip" "FaceRecognitionApp-$TRAVIS_TAG"
+  - APP_ZIP=$(pwd)/"FaceRecognitionApp-$TRAVIS_TAG.zip"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: AS5TYcwjqZes1JKqQTryPifgijqJd8H2lowmOWDPSwc17DYFWrU58TR2yn1KYFMQ0dzBse7q6W4Pa43UFl0vsNQaOzKiEg93NSZowXZx+uOF2nlfayFFxfGqVaKKyNpsV1Tmp+Q0eUK5XxBxJ5aSBgJ0II0lyjDaeNJ86x8mvxWoznRy4Ra9COiKnO5kRjwIoCbQFZcf9We4TuSzVnnAIKMeX1rYyczx099FWayIVgT1WSZYZ5r60iU2MZbpkP1/MAcZEOy9OhdQQYm4RYaVq2gmIgGqRKnQ6i9hJXHyNH/u8S3YOrK9SA6XSLN66KCnK4Sk/LtIIrw7ZVkgyHrgmp+hA4JiBuAGIlvDoMJHg8P1EWj2JeVh63NXJSFYvHgRqNpan+9Z+QISi+cAeejbQEumTLA3QJgdgCN22n6hgLWtPWLe4MDVZmWfhIZNZjQZC0C9w3Zi0fwJlf2fC2lQ2tthUBdX3CsM4Ct2Ev2Y+gWo0A4ykcgm0irv81BX6Pd9WAGNnT35+68xv5IU+K0RNT8XJD1aekVY7n7Z3I8f8n99OnFwP6k2T+4rseaY2pQT4aAmsLRKWtm5oKhPFW5hxjzd8REunohUZz81QdvDdCB6wm/knqIqy+A4kzoKkF2CrQxWGM4/hD0/Cnk5oGZSNNJYbfsb4SpBWwl7NiG1GzM=
+  file: "$APP_ZIP"
+  skip_cleanup: true
+  on:
+    tags: true
