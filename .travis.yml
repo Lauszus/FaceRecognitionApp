@@ -44,6 +44,9 @@ before_script:
   - export OPENCV_ANDROID_SDK=$(pwd)/OpenCV-android-sdk
   - export EIGEN3_DIR=$(dirname $(find $(pwd) -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
 
+  # Patch OpenCV, so it does not abort on lint errors
+  - patch $OPENCV_ANDROID_SDK/sdk/build.gradle < opencv.patch
+
 script:
   - ./gradlew build
 
@@ -64,9 +67,9 @@ before_deploy:
   - rm -f Eigen3.zip
 
   # Remove unused directories
-  - rm -rf android-ndk-*
-  - rm -rf OpenCV-android-sdk/apk
-  - rm -rf OpenCV-android-sdk/samples
+  - rm -rf $ANDROID_NDK_HOME
+  - rm -rf $OPENCV_ANDROID_SDK/apk
+  - rm -rf $OPENCV_ANDROID_SDK/samples
 
   # Hardcode paths to OpenCV and Eigen3
   - EIGEN3_DIR_NAME=$(basename $EIGEN3_DIR)

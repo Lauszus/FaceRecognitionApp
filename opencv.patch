@@ -1,0 +1,13 @@
+--- build-orig.gradle	2018-04-16 09:10:01.000000000 +0200
++++ build.gradle	2018-04-16 09:11:53.000000000 +0200
+@@ -121,6 +121,10 @@
+             manifest.srcFile 'java/AndroidManifest.xml'
+         }
+     }
++
++    lintOptions {
++        abortOnError false
++    }
+ }
+ 
+ dependencies {
