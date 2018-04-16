@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.os.Build;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -26,6 +27,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -408,15 +410,122 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         }
     }
 
+    private static int rating = -1;
+
     /**
      * Used to check if the app is running on an emulator or not.
-     * See: http://stackoverflow.com/a/27233595/2175837.
+     * See: https://github.com/gingo/android-emulator-detector
      * @return True if the app is running on an emulator.
      */
     public boolean isEmulator() {
-        if (BuildConfig.DEBUG)
-            return Build.BRAND.equalsIgnoreCase("generic") || Build.BRAND.equalsIgnoreCase("generic_x86") || Build.BRAND.equalsIgnoreCase("android");
-        else
+        if (BuildConfig.DEBUG) {
+            int newRating = 0;
+            if (rating < 0) {
+                if (Build.PRODUCT.contains("sdk") ||
+                        Build.PRODUCT.contains("Andy") ||
+                        Build.PRODUCT.contains("ttVM_Hdragon") ||
+                        Build.PRODUCT.contains("google_sdk") ||
+                        Build.PRODUCT.contains("Droid4X") ||
+                        Build.PRODUCT.contains("nox") ||
+                        Build.PRODUCT.contains("sdk_x86") ||
+                        Build.PRODUCT.contains("sdk_google") ||
+                        Build.PRODUCT.contains("vbox86p")) {
+                    Log.d(TAG, "Build.PRODUCT: " + Build.PRODUCT);
+                    newRating++;
+                }
+
+                if (Build.MANUFACTURER.equals("unknown") ||
+                        Build.MANUFACTURER.equals("Genymotion") ||
+                        Build.MANUFACTURER.contains("Andy") ||
+                        Build.MANUFACTURER.contains("MIT") ||
+                        Build.MANUFACTURER.contains("nox") ||
+                        Build.MANUFACTURER.contains("TiantianVM")){
+                    newRating++;
+                    Log.d(TAG, "Build.MANUFACTURER: " + Build.MANUFACTURER);
+                }
+
+                if (Build.BRAND.equals("generic") ||
+                        Build.BRAND.equals("generic_x86") ||
+                        Build.BRAND.equals("TTVM") ||
+                        Build.BRAND.equals("google") ||
+                        Build.BRAND.contains("Andy")) {
+                    newRating++;
+                    Log.d(TAG, "Build.BRAND: " + Build.BRAND);
+                }
+
+                if (Build.DEVICE.contains("generic") ||
+                        Build.DEVICE.contains("generic_x86") ||
+                        Build.DEVICE.contains("Andy") ||
+                        Build.DEVICE.contains("ttVM_Hdragon") ||
+                        Build.DEVICE.contains("Droid4X") ||
+                        Build.DEVICE.contains("nox") ||
+                        Build.DEVICE.contains("generic_x86_64") ||
+                        Build.DEVICE.contains("vbox86p")) {
+                    newRating++;
+                    Log.d(TAG, "Build.DEVICE: " + Build.DEVICE);
+                }
+
+                if (Build.MODEL.equals("sdk") ||
+                        Build.MODEL.equals("google_sdk") ||
+                        Build.MODEL.contains("Droid4X") ||
+                        Build.MODEL.contains("TiantianVM") ||
+                        Build.MODEL.contains("Andy") ||
+                        Build.MODEL.equals("Android SDK built for x86_64") ||
+                        Build.MODEL.equals("Android SDK built for x86")) {
+                    newRating++;
+                    Log.d(TAG, "Build.MODEL: " + Build.MODEL);
+                }
+
+                if (Build.HARDWARE.equals("goldfish") ||
+                        Build.HARDWARE.equals("vbox86") ||
+                        Build.HARDWARE.contains("nox") ||
+                        Build.HARDWARE.contains("ttVM_x86")) {
+                    Log.d(TAG, "Build.HARDWARE: " + Build.HARDWARE);
+                    newRating++;
+                }
+
+                if (Build.FINGERPRINT.contains("generic/sdk/generic") ||
+                        Build.FINGERPRINT.contains("generic_x86/sdk_x86/generic_x86") ||
+                        Build.FINGERPRINT.contains("Andy") ||
+                        Build.FINGERPRINT.contains("ttVM_Hdragon") ||
+                        Build.FINGERPRINT.contains("generic_x86_64") ||
+                        Build.FINGERPRINT.contains("generic/google_sdk/generic") ||
+                        Build.FINGERPRINT.contains("vbox86p") ||
+                        Build.FINGERPRINT.contains("generic/vbox86p/vbox86p")) {
+                    Log.d(TAG, "Build.FINGERPRINT: " + Build.FINGERPRINT);
+                    newRating++;
+                }
+
+                try {
+                    String opengl = android.opengl.GLES20.glGetString(android.opengl.GLES20.GL_RENDERER);
+                    if (opengl != null){
+                        if( opengl.contains("Bluestacks") ||
+                                opengl.contains("Translator")
+                                )
+                            newRating += 10;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    File sharedFolder = new File(Environment
+                            .getExternalStorageDirectory().toString()
+                            + File.separatorChar
+                            + "windows"
+                            + File.separatorChar
+                            + "BstSharedFolder");
+
+                    if (sharedFolder.exists()) {
+                        newRating += 10;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                rating = newRating;
+            }
+            return rating > 3;
+        } else
             return false; // Always return false if it is a release build
     }
 
@@ -541,7 +650,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 }
 
                 if (BuildConfig.DEBUG)
-                    Log.d(TAG, "mStretch value: " + mScale);
+                    Log.v(TAG, "mStretch value: " + mScale);
 
                 canvas.drawBitmap(outputBitmap, 0, 0, null);
 

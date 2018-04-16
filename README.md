@@ -24,7 +24,7 @@ The reports I wrote together with Jonathan Wang can be found at the following li
 
 In order to built this project you need to download and install [Android Studio](http://developer.android.com/sdk/index.html). You will then need to install the [Android NDK](https://developer.android.com/studio/projects/add-native-code.html#download-ndk).
 
-Then simply download the latest release: <https://github.com/Lauszus/FaceRecognitionApp/releases/download/1.2.1-dev/FaceRecognitionApp-1.2.1-dev.zip> and open the project in Android Studio.
+Then simply download the latest release: <https://github.com/Lauszus/FaceRecognitionApp/releases/download/1.2.1/FaceRecognitionApp-1.2.1.zip> and open the project in Android Studio.
 
 ## Advanced build instructions
 
@@ -44,12 +44,12 @@ git submodule update --init --recursive
 
 The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` in [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android) and [Eigen3](https://eigen.tuxfamily.org) libraries.
 
-Please use [OpenCV 3.2.0](https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-android-sdk.zip) and [Eigen3 3.3.3](https://bitbucket.org/eigen/eigen/get/3.3.3.zip). Both can be installed from the command line like so:
+Please use [OpenCV 3.4.1](https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip) and [Eigen3 3.3.4](https://bitbucket.org/eigen/eigen/get/3.3.4.zip). Both can be installed from the command line like so:
 
 ```bash
-wget https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-android-sdk.zip -O opencv-android-sdk.zip
-unzip opencv-android-sdk.zip
-wget https://bitbucket.org/eigen/eigen/get/3.3.3.zip -O Eigen3.zip
+wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip
+unzip opencv-3.4.1-android-sdk.zip
+wget https://bitbucket.org/eigen/eigen/get/3.3.4.zip -O Eigen3.zip
 unzip Eigen3.zip
 ```
 
