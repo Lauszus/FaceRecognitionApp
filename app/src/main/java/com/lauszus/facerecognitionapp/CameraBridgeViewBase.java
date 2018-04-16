@@ -37,6 +37,7 @@ import java.util.List;
  * frame to the screen.
  * The clients shall implement CvCameraViewListener.
  */
+@SuppressWarnings({"unused", "UnnecessaryInterfaceModifier"})
 public abstract class CameraBridgeViewBase extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final String TAG = "CameraBridge";
@@ -48,7 +49,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     private Bitmap mCacheBitmap;
     private CvCameraViewListener2 mListener;
     private boolean mSurfaceExist;
-    private Object mSyncObject = new Object();
+    private final Object mSyncObject = new Object();
 
     protected int mFrameWidth;
     protected int mFrameHeight;
@@ -56,7 +57,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     protected int mMaxWidth;
     protected float mScale = 0;
     protected int mPreviewFormat = RGBA;
-    protected int mCameraIndex = CAMERA_ID_ANY;
+    protected int mCameraIndex;
     protected boolean mEnabled;
     protected FpsMeter mFpsMeter = null;
 
@@ -66,7 +67,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     public static final int RGBA = 1;
     public static final int GRAY = 2;
 
-    public WindowManager mWindowManager;
+    private WindowManager mWindowManager;
 
     public CameraBridgeViewBase(Context context, int cameraId) {
         super(context);
@@ -80,13 +81,13 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         super(context, attrs);
 
         int count = attrs.getAttributeCount();
-        Log.d(TAG, "Attr count: " + Integer.valueOf(count));
+        Log.d(TAG, "Attr count: " + count);
 
         TypedArray styledAttrs = getContext().obtainStyledAttributes(attrs, R.styleable.CameraBridgeViewBase);
         if (styledAttrs.getBoolean(R.styleable.CameraBridgeViewBase_show_fps, false))
             enableFpsMeter();
 
-        mCameraIndex = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, -1);
+        mCameraIndex = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, CAMERA_ID_ANY);
 
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
@@ -157,8 +158,9 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
          * TODO: pass the parameters specifying the format of the frame (BPP, YUV or RGB and etc)
          */
         public Mat onCameraFrame(CvCameraViewFrame inputFrame);
-    };
+    }
 
+    @SuppressWarnings("WeakerAccess")
     protected class CvCameraViewListenerAdapter implements CvCameraViewListener2  {
         public CvCameraViewListenerAdapter(CvCameraViewListener oldStypeListener) {
             mOldStyleListener = oldStypeListener;
@@ -183,7 +185,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                     break;
                 default:
                     Log.e(TAG, "Invalid frame format! Only RGBA and Gray Scale are supported!");
-            };
+            }
 
             return result;
         }
@@ -194,7 +196,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
 
         private int mPreviewFormat = RGBA;
         private CvCameraViewListener mOldStyleListener;
-    };
+    }
 
     /**
      * This class interface is abstract representation of single frame from camera for onCameraFrame callback
@@ -211,7 +213,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
          * This method returns single channel gray scale Mat with frame
          */
         public Mat gray();
-    };
+    }
 
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
         Log.d(TAG, "call surfaceChanged event");
@@ -220,7 +222,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                 mSurfaceExist = true;
                 checkCurrentState();
             } else {
-                /** Surface changed. We need to stop camera and restart with new parameters */
+                /* Surface changed. We need to stop camera and restart with new parameters */
                 /* Pretend that old surface has been destroyed */
                 mSurfaceExist = false;
                 checkCurrentState();
@@ -280,9 +282,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
 
     /**
      *
-     * @param listener
+     * @param listener - set the CvCameraViewListener2
      */
-
     public void setCvCameraViewListener(CvCameraViewListener2 listener) {
         mListener = listener;
     }
@@ -352,7 +353,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
                     mListener.onCameraViewStopped();
                 }
                 break;
-        };
+        }
     }
 
     private void processExitState(int state) {
@@ -364,7 +365,7 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
             case STOPPED:
                 onExitStoppedState();
                 break;
-        };
+        }
     }
 
     private void onEnterStoppedState() {
@@ -687,15 +688,16 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
     public interface ListItemAccessor {
         public int getWidth(Object obj);
         public int getHeight(Object obj);
-    };
+    }
 
     /**
      * This helper method can be called by subclasses to select camera preview size.
      * It goes over the list of the supported preview sizes and selects the maximum one which
      * fits both values set via setMaxFrameSize() and surface frame allocated for this view
-     * @param supportedSizes
-     * @param surfaceWidth
-     * @param surfaceHeight
+     * @param supportedSizes - list of android.hardware.Camera.Size
+     * @param accessor - accessor used to get the width and height
+     * @param surfaceWidth - width of the surface
+     * @param surfaceHeight - height of the surface
      * @return optimal frame size
      */
     protected Size calculateCameraFrameSize(List<?> supportedSizes, ListItemAccessor accessor, int surfaceWidth, int surfaceHeight) {
@@ -711,8 +713,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
 
             if (width <= maxAllowedWidth && height <= maxAllowedHeight) {
                 if (width >= calcWidth && height >= calcHeight) {
-                    calcWidth = (int) width;
-                    calcHeight = (int) height;
+                    calcWidth = width;
+                    calcHeight = height;
                 }
             }
         }
