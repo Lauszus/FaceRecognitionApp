@@ -20,18 +20,18 @@ android:
     - tools
 
     # The BuildTools version used by your project
-    - build-tools-25.0.3
+    - build-tools-27.0.3
 
     # The SDK version used to compile your project
-    - android-24
+    - android-27
 
     # Additional components
     - extra-android-m2repository
 
 before_script:
-  - wget https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip
-  - unzip -q android-ndk-r14b-linux-x86_64.zip
-  - export ANDROID_NDK_HOME=$(pwd)/android-ndk-r14b
+  - wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
+  - unzip -q android-ndk-r16b-linux-x86_64.zip
+  - export ANDROID_NDK_HOME=$(pwd)/android-ndk-r16b
   - wget https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-android-sdk.zip
   - unzip -q opencv-3.2.0-android-sdk.zip
   - export OPENCV_ANDROID_SDK=$(pwd)/OpenCV-android-sdk
@@ -54,12 +54,12 @@ before_deploy:
   - find . -name .gitattributes | xargs rm -rf
 
   # Remove zip files
-  - rm -f android-ndk-r14b-linux-x86_64.zip
+  - rm -f android-ndk-r16b-linux-x86_64.zip
   - rm -f opencv-3.2.0-android-sdk.zip
   - rm -f Eigen3.zip
 
   # Remove unused directories
-  - rm -rf android-ndk-r14b
+  - rm -rf android-ndk-r16b
   - rm -rf OpenCV-android-sdk/apk
   - rm -rf OpenCV-android-sdk/samples
 
