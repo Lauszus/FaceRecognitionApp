@@ -16,6 +16,8 @@
 #   public *;
 #}
 
+-dontwarn com.google.android.gms.**
+
 -assumenosideeffects class android.util.Log {
     public static *** v(...);
     public static *** i(...);
