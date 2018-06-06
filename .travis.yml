@@ -75,8 +75,10 @@ before_deploy:
   # Hardcode paths to OpenCV and Eigen3
   - EIGEN3_DIR_NAME=$(basename $EIGEN3_DIR)
   - sed -i app/src/main/cpp/Android.mk -e "s/\$(OPENCV_ANDROID_SDK)/\$(LOCAL_PATH)\/..\/..\/..\/..\/OpenCV-android-sdk/"
-  - sed -i settings.gradle -e "s/System.getenv('OPENCV_ANDROID_SDK')/'OpenCV-android-sdk'/"
   - sed -i app/src/main/cpp/Android.mk -e "s/\$(EIGEN3_DIR)/\$(LOCAL_PATH)\/..\/..\/..\/..\/$EIGEN3_DIR_NAME/"
+  - sed -i app/src/main/cpp/Android.mk -e "/ifndef OPENCV_ANDROID_SDK/,+2d"
+  - sed -i app/src/main/cpp/Android.mk -e "/ifndef EIGEN3_DIR/,+2d"
+  - sed -i settings.gradle -e "s/System.getenv('OPENCV_ANDROID_SDK')/'OpenCV-android-sdk'/"
 
   # Zip the directory
   - cd ../
