@@ -1,19 +1,43 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '25.0.3'
+    compileSdkVersion 27
     defaultConfig {
         applicationId 'com.lauszus.facerecognitionapp'
         minSdkVersion 15
-        targetSdkVersion 24
+        targetSdkVersion 27
         versionCode 3
-        versionName '1.2'
+        versionName '1.2.1-dev'
         vectorDrawables.useSupportLibrary = true
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
             stl 'gnustl_static'
             cFlags '-std=gnu++11 -fexceptions -frtti'
+        }
+        setProperty('archivesBaseName', rootProject.name + '-' + defaultConfig.versionName)
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            universalApk true
+            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+    }
+    project.ext.abiCodes = ['armeabi-v7a':1, 'arm64-v8a':2, 'x86':3, 'x86_64':4]
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter(com.android.build.OutputFile.ABI))
+            // Because abiCodes.get() returns null for ABIs that are not mapped by ext.abiCodes,
+            // the following code does not override the version code for universal APKs.
+            if (baseAbiVersionCode != null) {
+                output.versionCodeOverride = baseAbiVersionCode * 1000000 + variant.versionCode
+            }
+        }
+        if (variant.getBuildType().isMinifyEnabled()) {
+            variant.assemble.doLast {
+                variant.mappingFile.renameTo(variant.mappingFile.parent +
+                        "/$archivesBaseName-$variant.baseName-mapping.txt")
+            }
         }
     }
     signingConfigs {
@@ -46,9 +70,9 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.android.support:design:24.2.1'
-    compile 'jp.seesaa.android:opencv:3.1.0.0'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation project(':opencv')
 }
 
 // These values are all set in my global gradle.properties file
