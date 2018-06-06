@@ -6,8 +6,8 @@ android {
         applicationId 'com.lauszus.facerecognitionapp'
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 4
-        versionName '1.2.1'
+        versionCode 5
+        versionName '1.2.2'
         vectorDrawables.useSupportLibrary = true
         ndk {
             stl 'gnustl_static'
