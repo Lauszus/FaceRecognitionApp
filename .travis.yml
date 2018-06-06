@@ -54,6 +54,7 @@ before_deploy:
   # Clean the project
   - ./gradlew clean
   - rm -rf build
+  - rm -rf app/.externalNativeBuild
 
   # Remove git files
   - find . -name .git | xargs rm -rf
