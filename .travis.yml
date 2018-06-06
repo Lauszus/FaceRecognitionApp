@@ -2,22 +2,34 @@ language: android
 
 sudo: required
 
-jdk:
-  - oraclejdk8
+jdk: oraclejdk8
 
 before_cache:
-  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
 
 cache:
   directories:
+    # Zip files cache
+    - $HOME/zip-cache/
+
+    # Android NDK, OpenCV SDK and Eigen
+    - $HOME/android-ndk/
+    - $HOME/opencv-sdk/
+    - $HOME/eigen3/
+
+    # Gradle dependencies
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+
+    # Android build cache (see http://tools.android.com/tech-docs/build-cache)
+    - $HOME/.android/build-cache/
 
 android:
   components:
     # Use the latest revision of Android SDK Tools
-    - platform-tools
     - tools
+    - platform-tools
 
     # The BuildTools version used by your project
     - build-tools-27.0.3
@@ -30,29 +42,29 @@ android:
 
 before_script:
   # Download Android NDK, OpenCV Android SDK and Eigen 3
-  - wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
-  - wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip
-  - wget https://bitbucket.org/eigen/eigen/get/3.3.4.zip -O Eigen3.zip
+  - if test ! -e $HOME/zip-cache/android-ndk.zip ; then wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O $HOME/zip-cache/android-ndk.zip ; fi
+  - if test ! -e $HOME/zip-cache/opencv-sdk.zip ; then wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip -O $HOME/zip-cache/opencv-sdk.zip ; fi
+  - if test ! -e $HOME/zip-cache/eigen3.zip ; then wget https://bitbucket.org/eigen/eigen/get/3.3.4.zip -O $HOME/zip-cache/eigen3.zip ; fi
 
-  # Unzip the zip files
-  - unzip -q android-ndk-*-linux-x86_64.zip
-  - unzip -q opencv-*-android-sdk.zip
-  - unzip -q Eigen3.zip
+  # Unzip the zip files into their directories
+  - unzip -qq -n $HOME/zip-cache/android-ndk.zip -d $HOME/android-ndk
+  - unzip -qq -n $HOME/zip-cache/opencv-sdk.zip -d $HOME/opencv-sdk
+  - unzip -qq -n $HOME/zip-cache/eigen3.zip -d $HOME/eigen3
 
   # Set environmental variables
-  - export ANDROID_NDK_HOME=$(pwd)/android-ndk-r16b
-  - export OPENCV_ANDROID_SDK=$(pwd)/OpenCV-android-sdk
-  - export EIGEN3_DIR=$(dirname $(find $(pwd) -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
+  - export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r16b
+  - export OPENCV_ANDROID_SDK=$HOME/opencv-sdk/OpenCV-android-sdk
+  - export EIGEN3_DIR=$(dirname $(find $HOME/eigen3 -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
 
   # Patch OpenCV, so it does not abort on lint errors
   - patch $OPENCV_ANDROID_SDK/sdk/build.gradle < opencv.patch
 
 script:
-  - ./gradlew build
+  - ./gradlew --no-daemon build
 
 before_deploy:
   # Clean the project
-  - ./gradlew clean
+  - ./gradlew --no-daemon clean
   - rm -rf build
   - rm -rf app/.externalNativeBuild
 
@@ -62,20 +74,17 @@ before_deploy:
   - find . -name .gitignore | xargs rm -rf
   - find . -name .gitattributes | xargs rm -rf
 
-  # Remove zip files
-  - rm -f android-ndk-*-linux-x86_64.zip
-  - rm -f opencv-*-android-sdk.zip
-  - rm -f Eigen3.zip
+  # Copy content of OpenCV and Eigen3 into the project directory
+  - mkdir -p OpenCV-android-sdk Eigen3
+  - cp -a $OPENCV_ANDROID_SDK/. OpenCV-android-sdk/
+  - cp -a $EIGEN3_DIR/. Eigen3/
 
-  # Remove unused directories
-  - rm -rf $ANDROID_NDK_HOME
-  - rm -rf $OPENCV_ANDROID_SDK/apk
-  - rm -rf $OPENCV_ANDROID_SDK/samples
+  # Remove unused directories from OpenCV
+  - rm -rf OpenCV-android-sdk/apk OpenCV-android-sdk/samples
 
-  # Hardcode paths to OpenCV and Eigen3
-  - EIGEN3_DIR_NAME=$(basename $EIGEN3_DIR)
+  # Hardcode paths to OpenCV and Eigen3 using relative paths
   - sed -i app/src/main/cpp/Android.mk -e "s/\$(OPENCV_ANDROID_SDK)/\$(LOCAL_PATH)\/..\/..\/..\/..\/OpenCV-android-sdk/"
-  - sed -i app/src/main/cpp/Android.mk -e "s/\$(EIGEN3_DIR)/\$(LOCAL_PATH)\/..\/..\/..\/..\/$EIGEN3_DIR_NAME/"
+  - sed -i app/src/main/cpp/Android.mk -e "s/\$(EIGEN3_DIR)/\$(LOCAL_PATH)\/..\/..\/..\/..\/Eigen3/"
   - sed -i app/src/main/cpp/Android.mk -e "/ifndef OPENCV_ANDROID_SDK/,+2d"
   - sed -i app/src/main/cpp/Android.mk -e "/ifndef EIGEN3_DIR/,+2d"
   - sed -i settings.gradle -e "s/System.getenv('OPENCV_ANDROID_SDK')/'OpenCV-android-sdk'/"
