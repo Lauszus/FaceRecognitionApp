@@ -42,7 +42,7 @@ If you have already cloned the project, then please run the following command in
 git submodule update --init --recursive
 ```
 
-The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` in [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android) and [Eigen3](https://eigen.tuxfamily.org) libraries.
+The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` for [settings.gradle](settings.gradle) and [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android) and [Eigen3](https://eigen.tuxfamily.org) libraries.
 
 Please use [OpenCV 3.4.1](https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip) and [Eigen3 3.3.4](https://bitbucket.org/eigen/eigen/get/3.3.4.zip). Both can be installed from the command line like so:
 
@@ -83,6 +83,6 @@ echo %OPENCV_ANDROID_SDK% %EIGEN3_DIR%
 
 __Please note that ```/path/to/``` should be replaced with the actual path to the Eigen and OpenCV Android SDK directories.__
 
-If you have troubles setting the environmental variables, then you can just hardcode the paths in [Android.mk](app/src/main/cpp/Android.mk).
+If you have troubles setting the environmental variables, then you can just hardcode the paths in [settings.gradle](settings.gradle) and [Android.mk](app/src/main/cpp/Android.mk).
 
 For more information send me an email at <lauszus@gmail.com>.
