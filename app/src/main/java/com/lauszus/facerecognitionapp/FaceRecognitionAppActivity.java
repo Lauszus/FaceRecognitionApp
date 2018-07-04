@@ -21,11 +21,13 @@ package com.lauszus.facerecognitionapp;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -41,12 +43,14 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceView;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -57,9 +61,14 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.wonderkiln.camerakit.CameraKit;
+import com.wonderkiln.camerakit.CameraKitEventCallback;
+import com.wonderkiln.camerakit.CameraKitImage;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -76,14 +85,13 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class FaceRecognitionAppActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class FaceRecognitionAppActivity extends AppCompatActivity {
     private static final String TAG = FaceRecognitionAppActivity.class.getSimpleName();
     private static final int PERMISSIONS_REQUEST_CODE = 0;
     private ArrayList<Mat> images;
     private ArrayList<String> imagesLabels;
     private String[] uniqueLabels;
-    private CameraBridgeViewBase mOpenCvCameraView;
-    private Mat mRgba, mGray;
+    private CameraViewDoubleTap mCameraView;
     private Toast mToast;
     private boolean useEigenfaces;
     private SeekBarArrows mThresholdFace, mThresholdDistance, mMaximumImages;
@@ -93,6 +101,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     private TinyDB tinydb;
     private Toolbar mToolbar;
     private NativeMethods.TrainFacesTask mTrainFacesTask;
+    private WindowManager mWindowManager;
 
     private void showToast(String message, int duration) {
         if (duration != Toast.LENGTH_SHORT && duration != Toast.LENGTH_LONG)
@@ -226,7 +235,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     dialog.dismiss();
-                    addLabel(arrayAdapter.getItem(position));
+                    String label = arrayAdapter.getItem(position);
+                    if (label != null)
+                        addLabel(label);
                 }
             });
         } else
@@ -272,7 +283,9 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
 
         // Show keyboard, so the user can start typing straight away
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        Window mWindow = dialog.getWindow();
+        if (mWindow != null)
+            mWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
         dialog.show();
     }
@@ -283,17 +296,19 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+
         setContentView(R.layout.activity_face_recognition_app);
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar); // Sets the Toolbar to act as the ActionBar for this Activity window
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        final RadioButton mRadioButtonEigenfaces = (RadioButton) findViewById(R.id.eigenfaces);
-        final RadioButton mRadioButtonFisherfaces = (RadioButton) findViewById(R.id.fisherfaces);
+        final RadioButton mRadioButtonEigenfaces = findViewById(R.id.eigenfaces);
+        final RadioButton mRadioButtonFisherfaces = findViewById(R.id.fisherfaces);
 
         mRadioButtonEigenfaces.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -328,7 +343,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
         tinydb = new TinyDB(this); // Used to store ArrayLists in the shared preferences
 
-        mThresholdFace = (SeekBarArrows) findViewById(R.id.threshold_face);
+        mThresholdFace = findViewById(R.id.threshold_face);
         mThresholdFace.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
             public void onProgressChanged(float progress) {
@@ -338,7 +353,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
         faceThreshold = mThresholdFace.getProgress(); // Get initial value
 
-        mThresholdDistance = (SeekBarArrows) findViewById(R.id.threshold_distance);
+        mThresholdDistance = findViewById(R.id.threshold_distance);
         mThresholdDistance.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
             public void onProgressChanged(float progress) {
@@ -348,7 +363,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         });
         distanceThreshold = mThresholdDistance.getProgress(); // Get initial value
 
-        mMaximumImages = (SeekBarArrows) findViewById(R.id.maximum_images);
+        mMaximumImages = findViewById(R.id.maximum_images);
         mMaximumImages.setOnSeekBarArrowsChangeListener(new SeekBarArrows.OnSeekBarArrowsChangeListener() {
             @Override
             public void onProgressChanged(float progress) {
@@ -375,6 +390,19 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             }
         });
 
+        mCameraView = findViewById(R.id.camera);
+        mCameraView.setOnToggleFacingListener(new CameraViewDoubleTap.OnToggleFacingListener() {
+            @Override
+            public void onToggleFacing() {
+                // Show flip animation when the camera is flipped due to a double tap
+                flipCameraAnimation();
+            }
+        });
+        //mCameraView.setMethod(CameraKit.Constants.METHOD_SPEED);
+        mCameraView.setFacing(prefs.getInt("facing", CameraKit.Constants.FACING_FRONT));
+        mCameraView.setPinchToZoom(false);
+        mCameraView.setPermissions(CameraKit.Constants.PERMISSIONS_PICTURE);
+
         findViewById(R.id.take_picture_button).setOnClickListener(new View.OnClickListener() {
             NativeMethods.MeasureDistTask mMeasureDistTask;
 
@@ -391,36 +419,56 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                     return;
                 }
 
-                Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
-                if (mGray.total() == 0)
-                    return;
-                Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
-                Imgproc.resize(mGray, mGray, imageSize);
-                Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
-                //SaveImage(mGray);
+                mCameraView.captureImage(new CameraKitEventCallback<CameraKitImage>() {
+                    @Override
+                    public void callback(CameraKitImage cameraKitImage) {
+                        Mat mRgba = new Mat();
+                        Bitmap bmp = cameraKitImage.getBitmap();
+                        Utils.bitmapToMat(bmp, mRgba);
 
-                Mat image = mGray.reshape(0, (int) mGray.total()); // Create column vector
-                Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
-                images.add(image); // Add current image to the array
+                        // Flip image so it is always pointing upward
+                        if (mCameraView.isFacingFront()) {
+                            int orientation = getScreenOrientation();
+                            switch (orientation) {
+                                case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+                                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+                                    Core.flip(mRgba, mRgba, -1); // Flip along both axis
+                                    break;
+                            }
+                        }
 
-                if (images.size() > maximumImages) {
-                    images.remove(0); // Remove first image
-                    imagesLabels.remove(0); // Remove first label
-                    Log.i(TAG, "The number of images is limited to: " + images.size());
-                }
+                        Mat mGray = new Mat();
+                        Imgproc.cvtColor(mRgba, mGray, Imgproc.COLOR_RGB2GRAY);
 
-                // Calculate normalized Euclidean distance
-                mMeasureDistTask = new NativeMethods.MeasureDistTask(useEigenfaces, measureDistTaskCallback);
-                mMeasureDistTask.execute(image);
+                        //SaveImage(mRgba);
+                        //SaveImage(mGray);
 
-                showLabelsDialog();
+                        Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+                        if (mGray.total() == 0)
+                            return;
+                        Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
+                        Imgproc.resize(mGray, mGray, imageSize);
+                        Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
+
+                        Mat image = mGray.reshape(0, (int) mGray.total()); // Create column vector
+                        Log.i(TAG, "Vector height: " + image.height() + " Width: " + image.width() + " total: " + image.total());
+                        images.add(image); // Add current image to the array
+
+                        if (images.size() > maximumImages) {
+                            images.remove(0); // Remove first image
+                            imagesLabels.remove(0); // Remove first label
+                            Log.i(TAG, "The number of images is limited to: " + images.size());
+                        }
+
+                        // Calculate normalized Euclidean distance
+                        mMeasureDistTask = new NativeMethods.MeasureDistTask(useEigenfaces, measureDistTaskCallback);
+                        mMeasureDistTask.execute(image);
+
+                        showLabelsDialog();
+                    }
+                });
             }
         });
-
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_java_surface_view);
-        mOpenCvCameraView.setCameraIndex(prefs.getInt("mCameraIndex", CameraBridgeViewBase.CAMERA_ID_FRONT));
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
     }
 
     private NativeMethods.MeasureDistTask.Callback measureDistTaskCallback = new NativeMethods.MeasureDistTask.Callback() {
@@ -461,27 +509,6 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
     };
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_CODE:
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    loadOpenCV();
-                } else {
-                    showToast("Permission required!", Toast.LENGTH_LONG);
-                    finish();
-                }
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         // Read threshold values
@@ -496,20 +523,44 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
     @Override
     public void onStop() {
-        super.onStop();
+        mCameraView.stop();
+
         // Store threshold values
         Editor editor = prefs.edit();
         editor.putFloat("faceThreshold", faceThreshold);
         editor.putFloat("distanceThreshold", distanceThreshold);
         editor.putInt("maximumImages", maximumImages);
         editor.putBoolean("useEigenfaces", useEigenfaces);
-        editor.putInt("mCameraIndex", mOpenCvCameraView.mCameraIndex);
+        editor.putInt("facing", mCameraView.getFacing());
         editor.apply();
 
         // Store ArrayLists containing the images and labels
         if (images != null && imagesLabels != null) {
             tinydb.putListMat("images", images);
             tinydb.putListString("imagesLabels", imagesLabels);
+        }
+
+        super.onStop();
+    }
+
+    @Override
+    public void onPause() {
+        mCameraView.stop();
+        super.onPause();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_CODE:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    loadOpenCV();
+                else {
+                    showToast("Camera permission required", Toast.LENGTH_LONG);
+                    finish();
+                }
+                break;
         }
     }
 
@@ -531,7 +582,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 case LoaderCallbackInterface.SUCCESS:
                     NativeMethods.loadNativeLibraries(); // Load native libraries after(!) OpenCV initialization
                     Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
+                    mCameraView.start();
 
                     // Read images and labels from shared preferences
                     images = tinydb.getListMat("images");
@@ -562,78 +613,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-
-    public void onCameraViewStarted(int width, int height) {
-        mGray = new Mat();
-        mRgba = new Mat();
-    }
-
-    public void onCameraViewStopped() {
-        mGray.release();
-        mRgba.release();
-    }
-
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        Mat mGrayTmp = inputFrame.gray();
-        Mat mRgbaTmp = inputFrame.rgba();
-
-        // Flip image to get mirror effect
-        int orientation = mOpenCvCameraView.getScreenOrientation();
-        if (mOpenCvCameraView.isEmulator()) // Treat emulators as a special case
-            Core.flip(mRgbaTmp, mRgbaTmp, 1); // Flip along y-axis
-        else {
-            switch (orientation) { // RGB image
-                case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
-                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mRgbaTmp, mRgbaTmp, 0); // Flip along x-axis
-                    else
-                        Core.flip(mRgbaTmp, mRgbaTmp, -1); // Flip along both axis
-                    break;
-                case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
-                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mRgbaTmp, mRgbaTmp, 1); // Flip along y-axis
-                    break;
-            }
-            switch (orientation) { // Grayscale image
-                case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
-                    Core.transpose(mGrayTmp, mGrayTmp); // Rotate image
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mGrayTmp, mGrayTmp, -1); // Flip along both axis
-                    else
-                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
-                    break;
-                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
-                    Core.transpose(mGrayTmp, mGrayTmp); // Rotate image
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK)
-                        Core.flip(mGrayTmp, mGrayTmp, 0); // Flip along x-axis
-                    break;
-                case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
-                    break;
-                case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
-                    Core.flip(mGrayTmp, mGrayTmp, 0); // Flip along x-axis
-                    if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK)
-                        Core.flip(mGrayTmp, mGrayTmp, 1); // Flip along y-axis
-                    break;
-            }
-        }
-
-        mGray = mGrayTmp;
-        mRgba = mRgbaTmp;
-
-        return mRgba;
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "unused"})
     public void SaveImage(Mat mat) {
         Mat mIntermediateMat = new Mat();
 
@@ -657,7 +637,7 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START))
             drawer.closeDrawer(GravityCompat.START);
         else
@@ -669,47 +649,106 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         getMenuInflater().inflate(R.menu.menu_face_recognition_app, menu);
         // Show rear camera icon if front camera is currently used and front camera icon if back camera is used
         MenuItem menuItem = menu.findItem(R.id.flip_camera);
-        if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-            menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
-        else
+        if (mCameraView.isFacingFront())
             menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+        else
+            menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
         return true;
+    }
+
+    private void flipCameraAnimation() {
+        // Do flip camera animation
+        View v = mToolbar.findViewById(R.id.flip_camera);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
+        animator.setDuration(500);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                supportInvalidateOptionsMenu(); // This will call onCreateOptionsMenu()
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.start();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.flip_camera:
-                mOpenCvCameraView.flipCamera();
-
-                // Do flip camera animation
-                View v = mToolbar.findViewById(R.id.flip_camera);
-                ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
-                animator.setDuration(500);
-                animator.addListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        supportInvalidateOptionsMenu(); // This will call onCreateOptionsMenu()
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                animator.start();
+                mCameraView.toggleFacing();
+                flipCameraAnimation();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Determine current orientation of the device.
+     * Source: http://stackoverflow.com/a/10383164/2175837
+     * @return Returns the current orientation of the device.
+     */
+    public int getScreenOrientation() {
+        int rotation = mWindowManager.getDefaultDisplay().getRotation();
+        DisplayMetrics dm = new DisplayMetrics();
+        mWindowManager.getDefaultDisplay().getMetrics(dm);
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        int orientation;
+        // If the device's natural orientation is portrait:
+        if ((rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) && height > width || (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) && width > height) {
+            switch(rotation) {
+                case Surface.ROTATION_0:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+                case Surface.ROTATION_90:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_180:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+                    break;
+                case Surface.ROTATION_270:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+                    break;
+                default:
+                    Log.e(TAG, "Unknown screen orientation. Defaulting to portrait");
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+            }
+        } else { // If the device's natural orientation is landscape or if the device is square:
+            switch(rotation) {
+                case Surface.ROTATION_0:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_90:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                    break;
+                case Surface.ROTATION_180:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+                    break;
+                case Surface.ROTATION_270:
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+                    break;
+                default:
+                    Log.e(TAG, "Unknown screen orientation. Defaulting to landscape");
+                    orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                    break;
+            }
+        }
+
+        return orientation;
     }
 }

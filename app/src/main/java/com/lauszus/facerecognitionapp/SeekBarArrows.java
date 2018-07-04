@@ -18,6 +18,7 @@
 
 package com.lauszus.facerecognitionapp;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Handler;
@@ -52,9 +53,9 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         float max = styledAttrs.getFloat(R.styleable.SeekBarArrows_max, 0);
         nValues = styledAttrs.getInt(R.styleable.SeekBarArrows_n_values, 0);
 
-        mSeekBar = (SeekBar) findViewById(R.id.seekBar);
+        mSeekBar = findViewById(R.id.seekBar);
         ((TextView) findViewById(R.id.text)).setText(mSeekBarText);
-        mSeekBarValue = (TextView) findViewById(R.id.value);
+        mSeekBarValue = findViewById(R.id.value);
 
         setMax(max); // Set maximum value
         mSeekBar.setOnSeekBarChangeListener(this); // Set listener
@@ -139,6 +140,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
         private SeekBar mSeekbar;
         private boolean positive;
 
+        @SuppressLint("ClickableViewAccessibility")
         OnArrowListener(View v, SeekBar mSeekbar, boolean positive) {
             Button mButton = (Button) v;
             this.mSeekbar = mSeekbar;
@@ -177,6 +179,7 @@ public class SeekBarArrows extends LinearLayout implements SeekBar.OnSeekBarChan
             return true;
         }
 
+        @SuppressLint("ClickableViewAccessibility")
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {

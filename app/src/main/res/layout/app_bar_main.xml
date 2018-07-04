@@ -7,11 +7,6 @@
     android:fitsSystemWindows="true"
     tools:context=".FaceRecognitionAppActivity">
 
-    <com.lauszus.facerecognitionapp.JavaCameraView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/camera_java_surface_view" />
-
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,6 +22,13 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
+
+    <com.lauszus.facerecognitionapp.CameraViewDoubleTap
+        android:id="@+id/camera"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        app:ckDoubleTapToToggleFacing="true" />
 
     <include layout="@layout/content_main" />
 
