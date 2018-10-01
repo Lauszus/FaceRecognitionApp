@@ -52,7 +52,7 @@ before_script:
   - unzip -qq -n $HOME/zip-cache/eigen3.zip -d $HOME/eigen3
 
   # Set environmental variables
-  - export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r16b
+  - export ANDROID_NDK_HOME=$(dirname $HOME/android-ndk/android-ndk-*/ndk-build)
   - export OPENCV_ANDROID_SDK=$HOME/opencv-sdk/OpenCV-android-sdk
   - export EIGEN3_DIR=$(dirname $(find $HOME/eigen3 -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
 
