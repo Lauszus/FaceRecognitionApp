@@ -42,7 +42,7 @@ android:
 
 before_script:
   # Download Android NDK, OpenCV Android SDK and Eigen 3
-  - if test ! -e $HOME/zip-cache/android-ndk.zip ; then wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O $HOME/zip-cache/android-ndk.zip ; fi
+  - if test ! -e $HOME/zip-cache/android-ndk.zip ; then wget https://dl.google.com/android/repository/android-ndk-r18-linux-x86_64.zip -O $HOME/zip-cache/android-ndk.zip ; fi
   - if test ! -e $HOME/zip-cache/opencv-sdk.zip ; then wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip -O $HOME/zip-cache/opencv-sdk.zip ; fi
   - if test ! -e $HOME/zip-cache/eigen3.zip ; then wget https://bitbucket.org/eigen/eigen/get/3.3.4.zip -O $HOME/zip-cache/eigen3.zip ; fi
 

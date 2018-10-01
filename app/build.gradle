@@ -10,7 +10,7 @@ android {
         versionName '1.2.2'
         vectorDrawables.useSupportLibrary = true
         ndk {
-            stl 'gnustl_static'
+            stl 'c++_static'
             cFlags '-std=gnu++11 -fexceptions -frtti'
         }
         setProperty('archivesBaseName', rootProject.name + '-' + defaultConfig.versionName)
