@@ -394,7 +394,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
                 if (mGray.total() == 0)
                     return;
-                Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
+
+                // Scale image in order to decrease computation time and make the image square,
+                // so it does not crash on phones with different aspect ratios for the front
+                // and back camera
+                Size imageSize = new Size(200, 200);
                 Imgproc.resize(mGray, mGray, imageSize);
                 Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
                 //SaveImage(mGray);
