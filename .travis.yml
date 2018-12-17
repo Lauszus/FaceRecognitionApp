@@ -32,19 +32,23 @@ android:
     - platform-tools
 
     # The BuildTools version used by your project
-    - build-tools-27.0.3
+    - build-tools-28.0.3
 
     # The SDK version used to compile your project
-    - android-27
+    - android-28
 
     # Additional components
     - extra-android-m2repository
 
+before_install:
+  # Accept the licenses needed for OpenCV and this project
+  - yes | sdkmanager "platforms;android-27" "platforms;android-28"
+
 before_script:
   # Download Android NDK, OpenCV Android SDK and Eigen 3
-  - if test ! -e $HOME/zip-cache/android-ndk.zip ; then wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O $HOME/zip-cache/android-ndk.zip ; fi
+  - if test ! -e $HOME/zip-cache/android-ndk.zip ; then wget https://dl.google.com/android/repository/android-ndk-r18-linux-x86_64.zip -O $HOME/zip-cache/android-ndk.zip ; fi
   - if test ! -e $HOME/zip-cache/opencv-sdk.zip ; then wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip -O $HOME/zip-cache/opencv-sdk.zip ; fi
-  - if test ! -e $HOME/zip-cache/eigen3.zip ; then wget https://bitbucket.org/eigen/eigen/get/3.3.4.zip -O $HOME/zip-cache/eigen3.zip ; fi
+  - if test ! -e $HOME/zip-cache/eigen3.zip ; then wget https://bitbucket.org/eigen/eigen/get/3.3.5.zip -O $HOME/zip-cache/eigen3.zip ; fi
 
   # Unzip the zip files into their directories
   - unzip -qq -n $HOME/zip-cache/android-ndk.zip -d $HOME/android-ndk
@@ -52,12 +56,12 @@ before_script:
   - unzip -qq -n $HOME/zip-cache/eigen3.zip -d $HOME/eigen3
 
   # Set environmental variables
-  - export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r16b
+  - export ANDROID_NDK_HOME=$(dirname $HOME/android-ndk/android-ndk-*/ndk-build)
   - export OPENCV_ANDROID_SDK=$HOME/opencv-sdk/OpenCV-android-sdk
   - export EIGEN3_DIR=$(dirname $(find $HOME/eigen3 -type f -name 'signature_of_eigen3_matrix_library' -print -quit))
 
-  # Patch OpenCV, so it does not abort on lint errors
-  - patch $OPENCV_ANDROID_SDK/sdk/build.gradle < opencv.patch
+  # Apply patch to OpenCV
+  - patch -d$OPENCV_ANDROID_SDK/../ -p0 < opencv.patch
 
 script:
   - ./gradlew --no-daemon build

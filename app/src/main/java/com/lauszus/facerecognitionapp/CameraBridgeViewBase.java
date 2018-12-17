@@ -71,10 +71,8 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
 
     public CameraBridgeViewBase(Context context, int cameraId) {
         super(context);
-        mCameraIndex = cameraId;
-        getHolder().addCallback(this);
-        mMaxWidth = MAX_UNSPECIFIED;
-        mMaxHeight = MAX_UNSPECIFIED;
+        construct(context, cameraId);
+
     }
 
     public CameraBridgeViewBase(Context context, AttributeSet attrs) {
@@ -87,13 +85,16 @@ public abstract class CameraBridgeViewBase extends SurfaceView implements Surfac
         if (styledAttrs.getBoolean(R.styleable.CameraBridgeViewBase_show_fps, false))
             enableFpsMeter();
 
-        mCameraIndex = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, CAMERA_ID_ANY);
+        int cameraId = styledAttrs.getInt(R.styleable.CameraBridgeViewBase_camera_id, CAMERA_ID_ANY);
+        styledAttrs.recycle();
+        construct(context, cameraId);
+    }
 
+    private void construct(Context context, int cameraId) {
+        mCameraIndex = cameraId;
         getHolder().addCallback(this);
         mMaxWidth = MAX_UNSPECIFIED;
         mMaxHeight = MAX_UNSPECIFIED;
-        styledAttrs.recycle();
-
         mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 

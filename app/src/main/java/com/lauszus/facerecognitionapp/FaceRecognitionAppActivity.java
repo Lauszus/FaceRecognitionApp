@@ -42,8 +42,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -394,7 +396,11 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
                 Log.i(TAG, "Gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
                 if (mGray.total() == 0)
                     return;
-                Size imageSize = new Size(200, 200.0f / ((float) mGray.width() / (float) mGray.height())); // Scale image in order to decrease computation time
+
+                // Scale image in order to decrease computation time and make the image square,
+                // so it does not crash on phones with different aspect ratios for the front
+                // and back camera
+                Size imageSize = new Size(200, 200);
                 Imgproc.resize(mGray, mGray, imageSize);
                 Log.i(TAG, "Small gray height: " + mGray.height() + " Width: " + mGray.width() + " total: " + mGray.total());
                 //SaveImage(mGray);
@@ -417,10 +423,29 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
             }
         });
 
+        final GestureDetector mGestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                // Show flip animation when the camera is flipped due to a double tap
+                flipCameraAnimation();
+                return true;
+            }
+        });
+
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.camera_java_surface_view);
         mOpenCvCameraView.setCameraIndex(prefs.getInt("mCameraIndex", CameraBridgeViewBase.CAMERA_ID_FRONT));
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
+        mOpenCvCameraView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return mGestureDetector.onTouchEvent(event);
+            }
+        });
     }
 
     private NativeMethods.MeasureDistTask.Callback measureDistTaskCallback = new NativeMethods.MeasureDistTask.Callback() {
@@ -670,44 +695,49 @@ public class FaceRecognitionAppActivity extends AppCompatActivity implements Cam
         // Show rear camera icon if front camera is currently used and front camera icon if back camera is used
         MenuItem menuItem = menu.findItem(R.id.flip_camera);
         if (mOpenCvCameraView.mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT)
-            menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
-        else
             menuItem.setIcon(R.drawable.ic_camera_front_white_24dp);
+        else
+            menuItem.setIcon(R.drawable.ic_camera_rear_white_24dp);
         return true;
+    }
+
+    private void flipCameraAnimation() {
+        // Flip the camera
+        mOpenCvCameraView.flipCamera();
+
+        // Do flip camera animation
+        View v = mToolbar.findViewById(R.id.flip_camera);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
+        animator.setDuration(500);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                supportInvalidateOptionsMenu(); // This will call onCreateOptionsMenu()
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.start();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.flip_camera:
-                mOpenCvCameraView.flipCamera();
-
-                // Do flip camera animation
-                View v = mToolbar.findViewById(R.id.flip_camera);
-                ObjectAnimator animator = ObjectAnimator.ofFloat(v, "rotationY", v.getRotationY() + 180.0f);
-                animator.setDuration(500);
-                animator.addListener(new Animator.AnimatorListener() {
-                    @Override
-                    public void onAnimationStart(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        supportInvalidateOptionsMenu(); // This will call onCreateOptionsMenu()
-                    }
-
-                    @Override
-                    public void onAnimationCancel(Animator animation) {
-
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animator animation) {
-
-                    }
-                });
-                animator.start();
+                flipCameraAnimation();
                 return true;
         }
         return super.onOptionsItemSelected(item);
