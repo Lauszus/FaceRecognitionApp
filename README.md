@@ -53,6 +53,12 @@ wget https://bitbucket.org/eigen/eigen/get/3.3.5.zip -O Eigen3.zip
 unzip Eigen3.zip
 ```
 
+Then apply the [patch](opencv.patch) to OpenCV:
+
+```bash
+patch -p0 < opencv.patch
+```
+
 Now simple set the environmental variables:
 
 Linux:
