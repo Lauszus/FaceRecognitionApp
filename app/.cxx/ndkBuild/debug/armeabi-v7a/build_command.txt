@@ -1,0 +1,19 @@
+Executable : C:\Users\55859\AppData\Local\Android\Sdk\ndk\20.0.5594570\ndk-build.cmd
+arguments : 
+NDK_PROJECT_PATH=null
+APP_BUILD_SCRIPT=C:\Users\55859\AndroidStudioProjects\FaceRecognitionApp\app\src\main\cpp\Android.mk
+NDK_APPLICATION_MK=C:\Users\55859\AndroidStudioProjects\FaceRecognitionApp\app\src\main\cpp\Application.mk
+APP_ABI=armeabi-v7a
+NDK_ALL_ABIS=armeabi-v7a
+NDK_DEBUG=1
+APP_PLATFORM=android-16
+NDK_OUT=C:/Users/55859/AndroidStudioProjects/FaceRecognitionApp/app/build/intermediates/ndkBuild/debug/obj
+NDK_LIBS_OUT=C:\Users\55859\AndroidStudioProjects\FaceRecognitionApp\app\build\intermediates\ndkBuild\debug\lib
+NDK_DEBUG=1
+NDEBUG=null
+APP_SHORT_COMMANDS=false
+LOCAL_SHORT_COMMANDS=false
+-B
+-n
+jvmArgs : 
+

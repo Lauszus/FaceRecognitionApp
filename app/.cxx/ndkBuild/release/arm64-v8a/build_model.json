@@ -1,0 +1,65 @@
+{
+  "variant": {
+    "module": {
+      "rootBuildGradleFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp",
+      "sdkFolder": "C:\\Users\\55859\\AppData\\Local\\Android\\Sdk",
+      "isNativeCompilerSettingsCacheEnabled": false,
+      "isBuildOnlyTargetAbiEnabled": true,
+      "splitsAbiFilterSet": [
+        "armeabi-v7a",
+        "x86_64",
+        "x86",
+        "arm64-v8a"
+      ],
+      "intermediatesFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates",
+      "gradleModulePathName": ":app",
+      "moduleRootFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app",
+      "makeFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Android.mk",
+      "buildSystem": "NDK_BUILD",
+      "compilerSettingsCacheFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\.cxx",
+      "cxxFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx",
+      "ndkFolder": "C:\\Users\\55859\\AppData\\Local\\Android\\Sdk\\ndk\\20.0.5594570",
+      "ndkVersion": "20.0.5594570",
+      "ndkSupportedAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "ndkDefaultAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "cmakeToolchainFile": "."
+    },
+    "buildSystemArgumentList": [],
+    "cFlagList": [],
+    "cppFlagsList": [],
+    "variantName": "release",
+    "soFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\release\\lib",
+    "objFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\release\\obj\\local",
+    "jsonFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release",
+    "gradleBuildOutputFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\cxx\\release",
+    "isDebuggableEnabled": false,
+    "validAbiList": [
+      "ARMEABI_V7A",
+      "ARM64_V8A",
+      "X86",
+      "X86_64"
+    ],
+    "buildTargetSet": []
+  },
+  "abi": "ARM64_V8A",
+  "abiPlatformVersion": 16,
+  "cxxBuildFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a",
+  "jsonFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\android_gradle_build.json",
+  "gradleBuildOutputFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\cxx\\release\\arm64-v8a",
+  "objFolder": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\release\\obj\\local\\arm64-v8a",
+  "buildCommandFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\build_command.txt",
+  "buildOutputFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\build_output.txt",
+  "modelOutputFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\build_model.json",
+  "jsonGenerationLoggingRecordFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\json_generation_record.json",
+  "compileCommandsJsonFile": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\.cxx\\ndkBuild\\release\\arm64-v8a\\compile_commands.json"
+}

@@ -1,0 +1,18 @@
+{
+  "buildFiles": [
+    "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Android.mk",
+    "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Application.mk"
+  ],
+  "cleanCommands": [
+    "C:\\Users\\55859\\AppData\\Local\\Android\\Sdk\\ndk\\20.0.5594570\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Android.mk NDK_APPLICATION_MK\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Application.mk APP_ABI\u003darmeabi-v7a NDK_ALL_ABIS\u003darmeabi-v7a NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-16 NDK_OUT\u003dC:/Users/55859/AndroidStudioProjects/FaceRecognitionApp/app/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\debug\\lib NDK_DEBUG\u003d1 NDEBUG\u003dnull clean"
+  ],
+  "buildTargetsCommand": "C:\\Users\\55859\\AppData\\Local\\Android\\Sdk\\ndk\\20.0.5594570\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Android.mk NDK_APPLICATION_MK\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Application.mk APP_ABI\u003darmeabi-v7a NDK_ALL_ABIS\u003darmeabi-v7a NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-16 NDK_OUT\u003dC:/Users/55859/AndroidStudioProjects/FaceRecognitionApp/app/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\debug\\lib NDK_DEBUG\u003d1 NDEBUG\u003dnull {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "face-lib-debug-armeabi-v7a": {
+      "artifactName": "face-lib",
+      "buildCommand": "C:\\Users\\55859\\AppData\\Local\\Android\\Sdk\\ndk\\20.0.5594570\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Android.mk NDK_APPLICATION_MK\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\src\\main\\cpp\\Application.mk APP_ABI\u003darmeabi-v7a NDK_ALL_ABIS\u003darmeabi-v7a NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-16 NDK_OUT\u003dC:/Users/55859/AndroidStudioProjects/FaceRecognitionApp/app/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dC:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\debug\\lib NDK_DEBUG\u003d1 NDEBUG\u003dnull C:/Users/55859/AndroidStudioProjects/FaceRecognitionApp/app/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/libface-lib.so",
+      "abi": "armeabi-v7a",
+      "output": "C:\\Users\\55859\\AndroidStudioProjects\\FaceRecognitionApp\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\armeabi-v7a\\libface-lib.so"
+    }
+  }
+}

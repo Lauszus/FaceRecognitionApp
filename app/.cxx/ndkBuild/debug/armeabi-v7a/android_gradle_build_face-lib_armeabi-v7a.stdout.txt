@@ -1,0 +1,8 @@
+[armeabi-v7a] Compile++ thumb: face-lib <= face-lib.cpp
+[armeabi-v7a] Compile++ thumb: face-lib <= Facebase.cpp
+[armeabi-v7a] Compile++ thumb: face-lib <= Eigenfaces.cpp
+[armeabi-v7a] Compile++ thumb: face-lib <= Fisherfaces.cpp
+[armeabi-v7a] Compile++ thumb: face-lib <= PCA.cpp
+[armeabi-v7a] Compile++ thumb: face-lib <= LDA.cpp
+[armeabi-v7a] Prebuilt       : libopencv_java3.so <= C:/OpenCV-android-sdk/sdk/native/jni/../libs/armeabi-v7a/
+[armeabi-v7a] SharedLibrary  : libface-lib.so

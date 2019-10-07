@@ -3,14 +3,14 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 ifndef OPENCV_ANDROID_SDK
-  $(error Please specify environmental variable OPENCV_ANDROID_SDK to OpenCV Android SDK directory)
+  $(C:\OpenCV-android-sdk)
 endif
 
 OPENCV_INSTALL_MODULES := on
-include $(OPENCV_ANDROID_SDK)/sdk/native/jni/OpenCV.mk
+include $(OPENCV_ANDROID_SDK)\sdk\native\jni\OpenCV.mk
 
 ifndef EIGEN3_DIR
-  $(error Please specify environmental variable EIGEN3_DIR to Eigen 3 directory)
+  $( C:\eigen-eigen-b3f3d4950030 )
 endif
 
 LOCAL_MODULE := face-lib
