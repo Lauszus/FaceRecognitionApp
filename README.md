@@ -44,12 +44,12 @@ git submodule update --init --recursive
 
 The project is relying on the environmental variables ```OPENCV_ANDROID_SDK``` and ```EIGEN3_DIR``` for [settings.gradle](settings.gradle) and [Android.mk](app/src/main/cpp/Android.mk) to be set to the path of the [OpenCV Android SDK](http://opencv.org/platforms/android) and [Eigen3](https://eigen.tuxfamily.org) libraries.
 
-Please use [OpenCV 3.4.1](https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip) and [Eigen3 3.3.5](https://bitbucket.org/eigen/eigen/get/3.3.5.zip). Both can be installed from the command line like so:
+Please use [OpenCV 3.4.1](https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip) and [Eigen3 3.3.5](https://gitlab.com/libeigen/eigen/-/archive/3.3.5/eigen-3.3.5.zip). Both can be installed from the command line like so:
 
 ```bash
 wget https://github.com/opencv/opencv/releases/download/3.4.1/opencv-3.4.1-android-sdk.zip
 unzip opencv-3.4.1-android-sdk.zip
-wget https://bitbucket.org/eigen/eigen/get/3.3.5.zip -O Eigen3.zip
+wget https://gitlab.com/libeigen/eigen/-/archive/3.3.5/eigen-3.3.5.zip -O Eigen3.zip
 unzip Eigen3.zip
 ```
 
